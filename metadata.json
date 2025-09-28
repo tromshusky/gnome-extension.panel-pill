@@ -1,0 +1,8 @@
+{
+  "name": "Panel Pill",
+  "description": "Shrinks the Panel to a pill",
+  "uuid": "panel-pill@tromshusky",
+  "shell-version": [
+    "48"
+  ]
+}
