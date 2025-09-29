@@ -43,7 +43,6 @@ export default class PanelPillExtension extends Extension {
     }
 
     enable() {
-        const panel_parent = Main.panel.get_parent();
         
         // this code would work, if the panel didnt resize (with accessibility and keyboard indicator)
 //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
@@ -92,9 +91,9 @@ export default class PanelPillExtension extends Extension {
 
         this.#windowManagerListenerID1 = global.window_manager.connect_after('size-change', onWindowMaximized);
 
-        panel_parent.x = new_x;
-        panel_parent.y = new_y;
-        panel_parent.width = new_width;
+        Main.layoutManager.panelBox.x = new_x;
+        Main.layoutManager.panelBox.y = new_y;
+        Main.layoutManager.panelBox.width = new_width;
         Main.panel.opacity = panel_opacity_high;
 
 
@@ -110,17 +109,15 @@ export default class PanelPillExtension extends Extension {
     }
 
     disable() {
-        const panel_parent = Main.panel.get_parent();
-
         Main.panel.disconnect(this.#mainPanelListenerID1);
         this.#mainPanelListenerID1 = null;
 
         global.window_manager.disconnect(this.#windowManagerListenerID1);
         this.#windowManagerListenerID1 = null;
 
-        panel_parent.x = 0;
-        panel_parent.y = 0;
-        panel_parent.width = global.screen_width;
+        Main.layoutManager.panelBox.x = 0;
+        Main.layoutManager.panelBox.y = 0;
+        Main.layoutManager.panelBox.width = global.screen_width;
 
         set_panel_reactivity(true);
         Main.panel.opacity = 255;
