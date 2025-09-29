@@ -19,7 +19,7 @@ const set_panel_reactivity = (value) => {
     });
 }
 
-export default class PlainExampleExtension extends Extension {
+export default class PanelPillExtension extends Extension {
     #mainOverviewListenerID1 = null;
     #mainOverviewListenerID2 = null;
     #mainPanelListenerID1 = null;
