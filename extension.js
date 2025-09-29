@@ -44,8 +44,13 @@ export default class PanelPillExtension extends Extension {
 
     enable() {
         const panel_parent = Main.panel.get_parent();
-        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
-        const min_width = elem_width + (Main.panel.height * 8);
+        
+        // this code would work, if the panel didnt resize (with accessibility and keyboard indicator)
+//        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
+//        const min_width = elem_width + (Main.panel.height * 8);
+        // until there is a nicer fix this will do:
+        const min_width = Main.panel.height * 20;
+
         const new_width = Math.min(min_width, global.screen_width);
         const new_x = (global.screen_width - new_width) / 2;
         const new_y = 4;
