@@ -2,6 +2,7 @@
   "name": "Panel Pill",
   "description": "Shrinks the Panel to a pill",
   "uuid": "panel-pill@tromshusky",
+  "url": "https://github.com/tromshusky/gnome-extension.panel-pill",
   "shell-version": [
     "48"
   ]
