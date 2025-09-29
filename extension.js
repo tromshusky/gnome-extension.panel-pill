@@ -5,13 +5,6 @@ import Clutter from "gi://Clutter";
 // import Shell from "gi://Shell";
 // import St from "gi://St";
 
-const panel_parent = Main.panel.get_parent();
-const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
-const min_width = elem_width + (Main.panel.height * 8);
-const new_width = Math.min(min_width, global.screen_width);
-const new_x = (global.screen_width - new_width) / 2;
-const new_y = 4;
-const new_radius = Main.panel.height / 2;
 const panel_opacity_low = 100;
 const panel_opacity_high = 235;
 const timeout_hide = 7000;
@@ -34,6 +27,14 @@ export default class PlainExampleExtension extends Extension {
 
 
     enable() {
+        const panel_parent = Main.panel.get_parent();
+        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
+        const min_width = elem_width + (Main.panel.height * 8);
+        const new_width = Math.min(min_width, global.screen_width);
+        const new_x = (global.screen_width - new_width) / 2;
+        const new_y = 4;
+        const new_radius = Main.panel.height / 2;
+
         this.#mainPanelListenerID1 = Main.panel.connect('button-press-event', () => {
             Main.panel.hide();
 
@@ -76,14 +77,20 @@ export default class PlainExampleExtension extends Extension {
     }
 
     disable() {
+        const panel_parent = Main.panel.get_parent();
+
         Main.panel.disconnect(this.#mainPanelListenerID1);
         this.#mainPanelListenerID1 = null;
+
         global.window_manager.disconnect(this.#windowManagerListenerID1);
         this.#windowManagerListenerID1 = null;
+
         panel_parent.x = 0;
         panel_parent.y = 0;
         panel_parent.width = global.screen_width;
+
         Main.panel.set_style("border-radius: " + 0 + "px;");
+
         Main.overview.disconnect(this.#mainOverviewListenerID1);
         this.#mainOverviewListenerID1 = null;
         Main.overview.disconnect(this.#mainOverviewListenerID2);
