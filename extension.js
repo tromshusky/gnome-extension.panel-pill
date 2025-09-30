@@ -54,6 +54,7 @@ export default class PanelPillExtension extends Extension {
 
 
     enable() {
+        global._panelpill = {};
         this.enableClickToHideBehaviour();
         //        this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
@@ -263,6 +264,7 @@ export default class PanelPillExtension extends Extension {
 
 
     scrollBehaviour(a, event) {
+        global._panelpill.scrollevent = event;
         switch (event.get_scroll_direction()) {
             case SCROLL_DIRECTION_UP:
                 this.flickUp(DURATION_FLICK, _ => {
