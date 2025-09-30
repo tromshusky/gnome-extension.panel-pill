@@ -23,6 +23,13 @@ const SCROLL_DIRECTION_UP = 1;
 const STILL_ON_SCREEN_PIXEL = 4;
 const TIEMOUT_HIDDEN = 7000;
 const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
+const ANIMATION_NONE = -1;
+const ANIMATION_LEFT = 0;
+const ANIMATION_LEFTLEFT = 1;
+const ANIMATION_RIGHT = 2;
+const ANIMATION_RIGHTRIGHT = 3;
+const ANIMATION_DOWN = 4;
+const ANIMATION_UP = 5;
 
 
 const set_panel_reactivity = (value) => {
@@ -52,6 +59,7 @@ export default class PanelPillExtension extends Extension {
     #timeoutRoundnessID = null;
     #timeoutStretchID = null;
 
+    #ongoingAnimation = false;
 
     enable() {
         global._panelpill = {};
@@ -61,6 +69,8 @@ export default class PanelPillExtension extends Extension {
         this.enableOverviewOpeningBehaviour();
         this.enableOverviewClosingBehaviour();
         this.resizeToPill();
+
+        global._panelpill.scroll_log = "";
     }
 
     disable() {
@@ -223,48 +233,103 @@ export default class PanelPillExtension extends Extension {
     }
 
 
-    flickRight(dur, callb) {
-        if (Main.layoutManager.panelBox.translation_x > 0) return false;
-        const relative_x = (Main.layoutManager.panelBox.translation_x < 0) ? 0 : (Main.layoutManager.panelBox.x - PANEL_Y);
+    flickLeft(dur, strong) {
+        const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
+        const alreadyMovingLeft = this.#ongoingAnimation === ANIMATION_LEFT;
+        const requestEnforcingLeftleft = alreadyMovingLeft && strong;
+        const invalidAnimationOverride = hasAnimation && !requestEnforcingLeftleft;
+        const theVeryLeft = PANEL_Y - Main.layoutManager.panelBox.x;
+        const panelIsAlreadyVeryLeft = Main.layoutManager.panelBox.translation_x === theVeryLeft;
+
+        if (invalidAnimationOverride || panelIsAlreadyVeryLeft) return false;
+
+        const panelIsLeftOrMid = Main.layoutManager.panelBox.translation_x <= 0;
+        const relative_x = (strong || panelIsLeftOrMid) ? theVeryLeft : 0;
+
+        const thisAnimation =
+            (relative_x === 0) ?
+                ANIMATION_LEFT :
+                ANIMATION_LEFTLEFT;
+
+        this.#ongoingAnimation = thisAnimation;
+
         Main.layoutManager.panelBox.ease({
             translation_x: relative_x,
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => {
+                if (this.#ongoingAnimation === thisAnimation)
+                    this.#ongoingAnimation = ANIMATION_NONE;
+            }
+        });
+        return true;
+    }
+
+
+    flickRight(dur, strong) {
+        const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
+        const alreadyMovingRight = this.#ongoingAnimation === ANIMATION_RIGHT;
+        const requestEnforcingRightright = alreadyMovingRight && strong;
+        const invalidAnimationOverride = hasAnimation && !requestEnforcingRightright;
+        const theVeryRight = Main.layoutManager.panelBox.x - PANEL_Y;
+        const panelIsAlreadyVeryRight = Main.layoutManager.panelBox.translation_x === theVeryRight;
+
+        if (invalidAnimationOverride || panelIsAlreadyVeryRight) return false;
+
+        const panelIsRightOrMid = Main.layoutManager.panelBox.translation_x >= 0;
+        const relative_x = (strong || panelIsRightOrMid) ? theVeryRight : 0;
+
+        const thisAnimation =
+            (relative_x === 0) ?
+                ANIMATION_RIGHT :
+                ANIMATION_RIGHTRIGHT;
+
+        this.#ongoingAnimation = thisAnimation;
+
+        Main.layoutManager.panelBox.ease({
+            translation_x: relative_x,
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => {
+                if (this.#ongoingAnimation === thisAnimation)
+                    this.#ongoingAnimation = ANIMATION_NONE;
+            }
         });
         return true;
     }
 
     flickDown(dur, callb) {
+
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
+
         Main.layoutManager.panelBox.ease({
             translation_y: 0,
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => { callb() }
         });
         return true;
     }
 
-    flickLeft(dur, callb) {
-        if (Main.layoutManager.panelBox.translation_x < 0) return false;
-        const relative_x = (Main.layoutManager.panelBox.translation_x > 0) ? 0 : (PANEL_Y - Main.layoutManager.panelBox.x);
-        Main.layoutManager.panelBox.ease({
-            translation_x: relative_x,
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
-        });
-        return true;
-    }
 
     flickUp(dur, callb) {
+
         if (Main.layoutManager.panelBox.translation_y < 0) return false;
         const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
         Main.layoutManager.panelBox.ease({
             translation_y: up_y,
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => { callb() }
         });
         return true;
     }
 
-
     scrollBehaviour(a, event) {
-        global._panelpill.scrollevent = event;
+        const strongFlickLeft = event.get_scroll_delta()[0] > 2;
+        const strongFlickRight = event.get_scroll_delta()[0] < (-2);
+        global._panelpill.strongFlickLeft ||= strongFlickLeft;
+
         switch (event.get_scroll_direction()) {
             case SCROLL_DIRECTION_UP:
                 this.flickUp(DURATION_FLICK, _ => {
@@ -277,13 +342,13 @@ export default class PanelPillExtension extends Extension {
                 break;
             case SCROLL_DIRECTION_DOWN:
                 this.flickDown(DURATION_FLICK) &&
-                this.temporarySetReactivityFalse(DURATION_FADEIN);
+                    this.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
                 break;
             case SCROLL_DIRECTION_RIGHT:
-                this.flickRight(DURATION_FLICK);
+                this.flickRight(DURATION_FLICK, strongFlickRight);
                 break;
             case SCROLL_DIRECTION_LEFT:
-                this.flickLeft(DURATION_FLICK);
+                this.flickLeft(DURATION_FLICK, strongFlickLeft);
                 break;
             default:
                 break;
