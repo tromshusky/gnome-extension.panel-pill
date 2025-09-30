@@ -7,7 +7,7 @@ import Clutter from "gi://Clutter";
 
 const DURATION_ASIDE = 7000;
 const DURATION_ASIDE_VERYLONG = 1000000;
-const DURATION_FADEIN = 1500;
+const DURATION_FADEIN = 800;
 const DURATION_FLICK = 200;
 const DURATION_RETURN = 2000;
 const MAXIMIZED_V_H = 3;
