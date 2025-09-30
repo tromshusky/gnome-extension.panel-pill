@@ -8,11 +8,11 @@ import FlickPanel from "./FlickPanel.js";
 
 export default class Scrolling {
     #mainPanelScrollListenerID1: number | null = null;
-    #pill: PanelPillExtension;
+    #panelPill: PanelPillExtension;
     #flickPanel: FlickPanel;
 
     constructor(pill: PanelPillExtension) {
-        this.#pill = pill;
+        this.#panelPill = pill;
         this.#flickPanel = new FlickPanel();
     }
     enableScrollBehaviour() {
@@ -35,14 +35,14 @@ export default class Scrolling {
         if (direction === Clutter.ScrollDirection.UP) {
             this.#flickPanel.up(DURATION_FLICK, () => {
                 const dur = DURATION_ASIDE_VERYLONG;
-                this.#pill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
+                this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
                 this.#flickPanel.up(dur, () => {
                     this.#flickPanel.down(DURATION_RETURN);
                 });
             });
         } else if (direction === Clutter.ScrollDirection.DOWN) {
             this.#flickPanel.down(DURATION_FLICK) &&
-                this.#pill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+                this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
         } else if (direction === Clutter.ScrollDirection.RIGHT) {
             this.#flickPanel.right(DURATION_FLICK);
         } else if (direction === Clutter.ScrollDirection.LEFT) {
