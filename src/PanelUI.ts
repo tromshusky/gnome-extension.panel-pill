@@ -27,6 +27,11 @@ export default class PanelUI {
     }
 
 
+    makeRound() {
+        const new_radius = Main.panel.height;
+        Main.panel.set_style("border-radius: " + new_radius + "px;");
+    }
+
     #getPanelWidth() {
         // this code would work, if the panel didnt resize (with accessibility and keyboard indicator)
         //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);

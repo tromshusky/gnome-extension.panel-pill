@@ -14,6 +14,7 @@ export const PANEL_OPACITY_MAX = 255;
 export const PANEL_XY_RATIO = 20;
 export const PANEL_Y = 4;
 export const STILL_ON_SCREEN_PIXEL = 4;
+export const ROUND_CORNER_DELAY = 1000;
 
 export default class PanelPillExtension extends Extension {
 
@@ -25,7 +26,7 @@ export default class PanelPillExtension extends Extension {
         super(args);
         this.panelUI = new PanelUI();
         this.scrolling = new Scrolling(this);
-        this.overviewFix = new OverviewFix();
+        this.overviewFix = new OverviewFix(this);
     }
 
     enable() {
