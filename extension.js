@@ -224,7 +224,7 @@ export default class PanelPillExtension extends Extension {
 
     flickRight(dur, callb) {
         if (Main.layoutManager.panelBox.translation_x > 0) return false;
-        const relative_x = (Main.panelBox.translation_x < 0) ? 0 : (Main.layoutManager.panelBox.x - PANEL_Y);
+        const relative_x = (Main.layoutManager.panelBox.translation_x < 0) ? 0 : (Main.layoutManager.panelBox.x - PANEL_Y);
         Main.layoutManager.panelBox.ease({
             translation_x: relative_x,
             duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
@@ -243,7 +243,7 @@ export default class PanelPillExtension extends Extension {
 
     flickLeft(dur, callb) {
         if (Main.layoutManager.panelBox.translation_x < 0) return false;
-        const relative_x = (Main.panelBox.translation_x > 0) ? 0 : (PANEL_Y - Main.layoutManager.panelBox.x);
+        const relative_x = (Main.layoutManager.panelBox.translation_x > 0) ? 0 : (PANEL_Y - Main.layoutManager.panelBox.x);
         Main.layoutManager.panelBox.ease({
             translation_x: relative_x,
             duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
