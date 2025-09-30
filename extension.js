@@ -12,8 +12,9 @@ const TIMEOUT_FADEIN = 1500;
 const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
 const PANEL_Y = 4;
 const PANEL_RATIO = 20;
+const DURATION_VERYLONG = 999999999;
 const DURATION_FLICK = 200;
-const DURATION_ASIDE = 7000;
+const DURATION_ASIDE = DURATION_VERYLONG; // 7000;
 const DURATION_RETURN = 2000;
 
 const set_panel_reactivity = (value) => {
@@ -229,7 +230,9 @@ export default class PanelPillExtension extends Extension {
 
 
     scrollBehaviour(a, event) {
-        if (event.get_scroll_direction() == 2) {
+        if (event.get_scroll_direction() == 1) {
+            this.flickMiddle(DURATION_FLICK);
+        } else if (event.get_scroll_direction() == 2) {
             this.flickRight(DURATION_FLICK, _ => {
 //                Main.layoutManager.panelBox.width = global.screen_width / 2.5;
                 this.flickRight(DURATION_ASIDE, _ => {
