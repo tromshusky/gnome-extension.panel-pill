@@ -20,6 +20,7 @@ const SCROLL_DIRECTION_DOWN = 0;
 const SCROLL_DIRECTION_LEFT = 3;
 const SCROLL_DIRECTION_RIGHT = 2;
 const SCROLL_DIRECTION_UP = 1;
+const STILL_ON_SCREEN_PIXEL = 4;
 const TIEMOUT_HIDDEN = 7000;
 const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
 
@@ -78,6 +79,9 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.y = PANEL_Y;
         Main.layoutManager.panelBox.width = new_width;
+        // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
+        // with height = 0 the panel itself stays on the normal height.
+        Main.layoutManager.panelBox.height = 0;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
         this.makePanelRound();
     }
@@ -219,32 +223,42 @@ export default class PanelPillExtension extends Extension {
 
 
     flickRight(dur, callb) {
+        if (Main.layoutManager.panelBox.translation_x > 0) return false;
+        const relative_x = (Main.panelBox.translation_x < 0) ? 0 : (Main.layoutManager.panelBox.x - PANEL_Y);
         Main.layoutManager.panelBox.ease({
-            translation_x: (Main.layoutManager.panelBox.x - PANEL_Y),
+            translation_x: relative_x,
             duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
-        })
+        });
+        return true;
     }
 
-    flickMiddle(dur, callb) {
+    flickDown(dur, callb) {
+        if (Main.layoutManager.panelBox.translation_y == 0) return false;
         Main.layoutManager.panelBox.ease({
-            translation_x: 0,
             translation_y: 0,
             duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
-        })
+        });
+        return true;
     }
 
     flickLeft(dur, callb) {
+        if (Main.layoutManager.panelBox.translation_x < 0) return false;
+        const relative_x = (Main.panelBox.translation_x > 0) ? 0 : (PANEL_Y - Main.layoutManager.panelBox.x);
         Main.layoutManager.panelBox.ease({
-            translation_x: (PANEL_Y - Main.layoutManager.panelBox.x),
+            translation_x: relative_x,
             duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
         });
+        return true;
     }
 
     flickUp(dur, callb) {
+        if (Main.layoutManager.panelBox.translation_y < 0) return false;
+        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
         Main.layoutManager.panelBox.ease({
-            translation_y: (1 - Main.panel.height),
+            translation_y: up_y,
             duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
         });
+        return true;
     }
 
 
@@ -255,26 +269,19 @@ export default class PanelPillExtension extends Extension {
                     const dur = DURATION_ASIDE_VERYLONG;
                     this.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
                     this.flickUp(dur, _ => {
-                        this.flickMiddle(DURATION_RETURN);
+                        this.flickDown(DURATION_RETURN);
                     });
                 });
                 break;
             case SCROLL_DIRECTION_DOWN:
-                this.flickMiddle(DURATION_FLICK);
+                this.flickDown(DURATION_FLICK) &&
+                this.temporarySetReactivityFalse(DURATION_FADEIN);
                 break;
             case SCROLL_DIRECTION_RIGHT:
-                this.flickRight(DURATION_FLICK, _ => {
-                    this.flickRight(DURATION_ASIDE_VERYLONG, _ => {
-                        this.flickMiddle(DURATION_RETURN);
-                    });
-                });
+                this.flickRight(DURATION_FLICK);
                 break;
             case SCROLL_DIRECTION_LEFT:
-                this.flickLeft(DURATION_FLICK, _ => {
-                    this.flickLeft(DURATION_ASIDE_VERYLONG, _ => {
-                        this.flickMiddle(DURATION_RETURN);
-                    });
-                });
+                this.flickLeft(DURATION_FLICK);
                 break;
             default:
                 break;
