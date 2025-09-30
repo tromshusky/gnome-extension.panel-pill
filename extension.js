@@ -1,8 +1,8 @@
 "use strict";
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import Scrolling from './Scrolling';
-import OverviewFix from './OverviewFix';
+import Scrolling from './Scrolling.js';
+import OverviewFix from './OverviewFix.js';
 
 // import Shell from "gi://Shell";
 // import St from "gi://St";
