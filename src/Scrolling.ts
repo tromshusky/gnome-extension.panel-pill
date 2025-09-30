@@ -32,6 +32,9 @@ export default class Scrolling {
         const strongFlickLeft = event.get_scroll_delta()[0] > 2;
         const strongFlickRight = event.get_scroll_delta()[0] < (-2);
 
+        const realScrollRight = Clutter.ScrollDirection.LEFT;
+        const realScrollLeft = Clutter.ScrollDirection.RIGHT;
+
         if (direction === Clutter.ScrollDirection.UP) {
             this.#flickPanel.up(DURATION_FLICK, () => {
                 const dur = DURATION_ASIDE_VERYLONG;
@@ -43,9 +46,9 @@ export default class Scrolling {
         } else if (direction === Clutter.ScrollDirection.DOWN) {
             this.#flickPanel.down(DURATION_FLICK) &&
                 this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
-        } else if (direction === Clutter.ScrollDirection.RIGHT) {
+        } else if (direction === realScrollRight) {
             this.#flickPanel.right(DURATION_FLICK);
-        } else if (direction === Clutter.ScrollDirection.LEFT) {
+        } else if (direction === realScrollLeft) {
             this.#flickPanel.left(DURATION_FLICK);
         } else if (strongFlickLeft) {
             this.#flickPanel.left(DURATION_FLICK, true);
