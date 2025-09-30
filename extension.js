@@ -235,7 +235,7 @@ export default class PanelPillExtension extends Extension {
 
     flickSideways(direction, dur, strong) {
         // with Here is meant the target side / direction side
-        if ((direction !== ANIMATION_RIGHT) && (direction !== ANIMATION_RIGHT)) Main.panel.scaleY = 20;
+        if ((direction !== ANIMATION_RIGHT) && (direction !== ANIMATION_LEFT)) Main.panel.scaleY = 20;
         const isRight = direction === ANIMATION_RIGHT;
 
         const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
