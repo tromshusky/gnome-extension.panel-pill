@@ -63,14 +63,13 @@ export default class PanelPillExtension extends Extension {
 
     enable() {
         global._panelpill = {};
-        this.enableClickToHideBehaviour();
-        //        this.enableUndoMaximizeBehaviour();
+        // this.enableClickToHideBehaviour();
+        // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
         this.enableOverviewOpeningBehaviour();
         this.enableOverviewClosingBehaviour();
         this.resizeToPill();
 
-        global._panelpill.scroll_log = "";
     }
 
     disable() {
@@ -233,28 +232,34 @@ export default class PanelPillExtension extends Extension {
     }
 
 
-    flickLeft(dur, strong) {
-        global._panelpill.strongFlickLeftRequest ||= strong;
+
+    flickSideways(direction, dur, strong) {
+        // with Here is meant the target side / direction side
+        if ((direction !== ANIMATION_RIGHT) && (direction !== ANIMATION_RIGHT)) Main.panel.scaleY = 20;
+        const isRight = direction === ANIMATION_RIGHT;
+
         const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
-        const alreadyMovingLeft = this.#ongoingAnimation === ANIMATION_LEFT;
-        const requestEnforcingLeftleft = alreadyMovingLeft && strong;
-        const invalidAnimationOverride = hasAnimation && !requestEnforcingLeftleft;
-        const theVeryLeft = PANEL_Y - Main.layoutManager.panelBox.x;
-        const panelIsAlreadyVeryLeft = Main.layoutManager.panelBox.translation_x === theVeryLeft;
+        const alreadyMovingSoft = this.#ongoingAnimation === direction;
+        const requestEnforcingDirection = alreadyMovingSoft && strong;
+        const invalidAnimationOverride = hasAnimation && !requestEnforcingDirection;
 
-        if (invalidAnimationOverride || panelIsAlreadyVeryLeft) return false;
+        const theVeryEnd = isRight ? (Main.layoutManager.panelBox.x - PANEL_Y) : (PANEL_Y - Main.layoutManager.panelBox.x);
+        const panelIsAlreadyVeryHere = Main.layoutManager.panelBox.translation_x === theVeryEnd;
 
-        const panelIsLeftOrMid = Main.layoutManager.panelBox.translation_x <= 0;
-        const relative_x = (strong || panelIsLeftOrMid) ? theVeryLeft : 0;
+        if (invalidAnimationOverride || panelIsAlreadyVeryHere) return false;
+
+        const panelIsHereOrMid = isRight ?
+            (Main.layoutManager.panelBox.translation_x >= 0) :
+            (Main.layoutManager.panelBox.translation_x <= 0);
+
+        const relative_x = (strong || panelIsHereOrMid) ? theVeryEnd : 0;
 
         const thisAnimation =
-            (relative_x === 0) ?
-                ANIMATION_LEFT :
-                ANIMATION_LEFTLEFT;
+            (relative_x === 0) ? direction :
+                (isRight ? ANIMATION_RIGHTRIGHT : ANIMATION_LEFTLEFT);
 
         this.#ongoingAnimation = thisAnimation;
 
-        global._panelpill.strongFlickLeftCall ||= strong;
         Main.layoutManager.panelBox.ease({
             translation_x: relative_x,
             duration: dur,
@@ -266,44 +271,18 @@ export default class PanelPillExtension extends Extension {
         });
         return true;
     }
-
 
     flickRight(dur, strong) {
-        const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
-        const alreadyMovingRight = this.#ongoingAnimation === ANIMATION_RIGHT;
-        const requestEnforcingRightright = alreadyMovingRight && strong;
-        const invalidAnimationOverride = hasAnimation && !requestEnforcingRightright;
-        const theVeryRight = Main.layoutManager.panelBox.x - PANEL_Y;
-        const panelIsAlreadyVeryRight = Main.layoutManager.panelBox.translation_x === theVeryRight;
-
-        if (invalidAnimationOverride || panelIsAlreadyVeryRight) return false;
-
-        const panelIsRightOrMid = Main.layoutManager.panelBox.translation_x >= 0;
-        const relative_x = (strong || panelIsRightOrMid) ? theVeryRight : 0;
-
-        const thisAnimation =
-            (relative_x === 0) ?
-                ANIMATION_RIGHT :
-                ANIMATION_RIGHTRIGHT;
-
-        this.#ongoingAnimation = thisAnimation;
-
-        Main.layoutManager.panelBox.ease({
-            translation_x: relative_x,
-            duration: dur,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: _ => {
-                if (this.#ongoingAnimation === thisAnimation)
-                    this.#ongoingAnimation = ANIMATION_NONE;
-            }
-        });
-        return true;
+        this.flickSideways(ANIMATION_RIGHT, dur, strong);
     }
 
+    flickLeft(dur, strong) {
+        this.flickSideways(ANIMATION_LEFT, dur, strong);
+    }
+
+
     flickDown(dur, callb) {
-
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
-
         Main.layoutManager.panelBox.ease({
             translation_y: 0,
             duration: dur,
