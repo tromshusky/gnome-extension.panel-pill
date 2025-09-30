@@ -1,10 +1,12 @@
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
+import GLib from 'gi://GLib';
+import { PANEL_Y } from "./extension.js";
 
 export default class OverviewFix {
 
-    #timeoutRoundnessID = null;
-    #mainOverviewListenerID1 = null;
-    #mainOverviewListenerID2 = null;
+    #timeoutRoundnessID: GLib.Source | null = null;
+    #mainOverviewListenerID1: GLib.Source | null = null;
+    #mainOverviewListenerID2: GLib.Source | null = null;
 
     makePanelRound() {
         const new_radius = Main.panel.height;
@@ -33,7 +35,7 @@ export default class OverviewFix {
     }
 
     overviewOpeningBehaviour() {
-        Main.overview._overview.first_child.first_child.margin_top = global._panelpill.PANEL_Y + Main.panel.height + global._panelpill.PANEL_Y;
+        Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
     }
 
     enableOverviewOpeningBehaviour() {
