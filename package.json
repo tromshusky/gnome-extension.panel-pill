@@ -1,19 +1,19 @@
 {
-  "name": "my-extension",
+  "name": "panelpill",
   "version": "0.0.0",
   "description": "A TypeScript GNOME Extension",
   "type": "module",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/example/my-extension.git"
+    "url": "git+https://github.com/tromshusky/gnome-extension.panel-pill.git"
   },
-  "author": "Álan Crístoffer e Sousa <acristoffers@startmail.com>",
+  "author": "tromshusky",
   "license": "LGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/example/my-extension/issues"
+    "url": "https://github.com/tromshusky/gnome-extension.panel-pill/issues"
   },
-  "homepage": "https://github.com/example/my-extension#readme",
+  "homepage": "https://github.com/tromshusky/gnome-extension.panel-pill#readme",
   "sideEffects": false,
   "devDependencies": {
     "eslint": "^9.36.0",
