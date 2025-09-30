@@ -5,16 +5,32 @@ import Clutter from "gi://Clutter";
 // import Shell from "gi://Shell";
 // import St from "gi://St";
 
-const PANEL_OPACITY_LOW = 100;
-const PANEL_OPACITY_HIGH = 225;
-const TIEMOUT_HIDDEN = 7000;
-const TIMEOUT_FADEIN = 1500;
-const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
-const PANEL_Y = 4;
-const PANEL_RATIO = 20;
-const DURATION_FLICK = 200;
 const DURATION_ASIDE = 7000;
+const DURATION_ASIDE_VERYLONG = 1000000;
+const DURATION_FADEIN = 1500;
+const DURATION_FLICK = 200;
 const DURATION_RETURN = 2000;
+const MAXIMIZED_V_H = 3;
+const PANEL_OPACITY_HIGH = 225;
+const PANEL_OPACITY_MAX = 255;
+const PANEL_OPACITY_LOW = 100;
+const PANEL_RATIO = 20;
+const PANEL_Y = 4;
+const SCROLL_DIRECTION_DOWN = 0;
+const SCROLL_DIRECTION_LEFT = 3;
+const SCROLL_DIRECTION_RIGHT = 2;
+const SCROLL_DIRECTION_UP = 1;
+const STILL_ON_SCREEN_PIXEL = 4;
+const TIEMOUT_HIDDEN = 7000;
+const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
+const ANIMATION_NONE = -1;
+const ANIMATION_LEFT = 0;
+const ANIMATION_LEFTLEFT = 1;
+const ANIMATION_RIGHT = 2;
+const ANIMATION_RIGHTRIGHT = 3;
+const ANIMATION_DOWN = 4;
+const ANIMATION_UP = 5;
+
 
 const set_panel_reactivity = (value) => {
     Main.panel.get_children().map(e => {
@@ -43,14 +59,17 @@ export default class PanelPillExtension extends Extension {
     #timeoutRoundnessID = null;
     #timeoutStretchID = null;
 
+    #ongoingAnimation = ANIMATION_NONE;
 
     enable() {
-        this.enableClickToHideBehaviour();
-        //        this.enableUndoMaximizeBehaviour();
+        global._panelpill = {};
+        // this.enableClickToHideBehaviour();
+        // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
         this.enableOverviewOpeningBehaviour();
         this.enableOverviewClosingBehaviour();
         this.resizeToPill();
+
     }
 
     disable() {
@@ -60,6 +79,7 @@ export default class PanelPillExtension extends Extension {
         this.disableOverviewOpeningBehaviour();
         this.disableOverviewClosingBehaviour();
         this.resizeBackToVanilla();
+        Main.panel.opacity = PANEL_OPACITY_MAX;
     }
 
 
@@ -69,6 +89,9 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.y = PANEL_Y;
         Main.layoutManager.panelBox.width = new_width;
+        // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
+        // with height = 0 the panel itself stays on the normal height.
+        Main.layoutManager.panelBox.height = 0;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
         this.makePanelRound();
     }
@@ -78,7 +101,6 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
 
-        Main.panel.opacity = 255;
         Main.panel.set_style("");
     }
 
@@ -91,7 +113,7 @@ export default class PanelPillExtension extends Extension {
 
         make_round();
 
-        // for some funny reason its safer to repeat after a delay
+        // for some funny reason its better to repeat after a delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
         this.#timeoutRoundnessID = setTimeout(make_round, 1000);
@@ -130,6 +152,21 @@ export default class PanelPillExtension extends Extension {
         this.#mainOverviewListenerID1 = null;
     }
 
+    temporarySetReactivityFalse(duration) {
+        set_panel_reactivity(false);
+        Main.panel.opacity = PANEL_OPACITY_LOW;
+        if (this.#timeoutFadeinID != null)
+            clearTimeout(this.#timeoutFadeinID);
+        this.#timeoutFadeinID = setTimeout(this.resetReacticity.bind(this), duration);
+    }
+
+    resetReacticity() {
+        if (this.#timeoutFadeinID)
+            clearTimeout(this.#timeoutFadeinID);
+        this.#timeoutFadeinID = null;
+        set_panel_reactivity(true);
+        Main.panel.opacity = PANEL_OPACITY_HIGH;
+    }
 
 
     clickToHideBehaviour() {
@@ -139,18 +176,10 @@ export default class PanelPillExtension extends Extension {
             clearTimeout(this.#timeoutVanishID);
 
         this.#timeoutVanishID = setTimeout(() => {
-            set_panel_reactivity(false);
-            Main.panel.opacity = PANEL_OPACITY_LOW;
             Main.panel.show();
         }, TIEMOUT_HIDDEN);
 
-        if (this.#timeoutFadeinID != null)
-            clearTimeout(this.#timeoutFadeinID);
-
-        this.#timeoutFadeinID = setTimeout(() => {
-            set_panel_reactivity(true);
-            Main.panel.opacity = PANEL_OPACITY_HIGH;
-        }, TIEMOUT_HIDDEN + TIMEOUT_FADEIN);
+        this.temporarySetReactivityFalse(TIEMOUT_HIDDEN + DURATION_FADEIN);
 
         return Clutter.EVENT_STOP; // Prevent further handling of the event
     }
@@ -161,8 +190,7 @@ export default class PanelPillExtension extends Extension {
         this.#mainPanelClickListenerID1 = Main.panel.connect('button-press-event', this.clickToHideBehaviour.bind(this));
     }
     disableClickToHideBehaviour() {
-        set_panel_reactivity(true);
-        set_opacity_panel_high();
+        this.resetReacticity();
 
         if (this.#mainPanelClickListenerID1 != null)
             Main.panel.disconnect(this.#mainPanelClickListenerID1);
@@ -172,14 +200,12 @@ export default class PanelPillExtension extends Extension {
             clearTimeout(this.#timeoutVanishID);
         this.#timeoutVanishID = null;
 
-        if (this.#timeoutFadeinID != null)
-            clearTimeout(this.#timeoutFadeinID);
-        this.#timeoutFadeinID = null;
+        this.resetReacticity();
     }
 
     undoMaximizeBehaviour(wm, win) {
-        if (win.metaWindow.get_maximized() == 3) {
-            const unmaxWindow = () => win.metaWindow.unmaximize(3);
+        if (win.metaWindow.get_maximized() == MAXIMIZED_V_H) {
+            const unmaxWindow = () => win.metaWindow.unmaximize(MAXIMIZED_V_H);
             const stretchWindow = () => win.metaWindow.move_resize_frame(false, 0, 0, global.screen_width, global.screen_height);
 
             unmaxWindow();
@@ -206,48 +232,114 @@ export default class PanelPillExtension extends Extension {
     }
 
 
-    flickRight(dur, callb) {
-        Main.layoutManager.panelBox.ease({
-            translation_x: (Main.layoutManager.panelBox.x),
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
-        })
-    }
 
-    flickMiddle(dur, callb) {
-        Main.layoutManager.panelBox.ease({
-            translation_x: 0,
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
-        })
-    }
+    flickSideways(direction, dur, strong) {
+        // with Here is meant the target side / direction side
+        if ((direction !== ANIMATION_RIGHT) && (direction !== ANIMATION_LEFT)) Main.panel.scaleY = 20;
+        const isRight = direction === ANIMATION_RIGHT;
 
-    flickLeft(dur, callb) {
+        const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
+        const alreadyMovingSoft = this.#ongoingAnimation === direction;
+        const requestEnforcingDirection = alreadyMovingSoft && strong;
+        const invalidAnimationOverride = hasAnimation && !requestEnforcingDirection;
+
+        const theVeryEnd = isRight ? (Main.layoutManager.panelBox.x - PANEL_Y) : (PANEL_Y - Main.layoutManager.panelBox.x);
+        const panelIsAlreadyVeryHere = Main.layoutManager.panelBox.translation_x === theVeryEnd;
+
+        if (invalidAnimationOverride || panelIsAlreadyVeryHere) return false;
+
+        const panelIsHereOrMid = isRight ?
+            (Main.layoutManager.panelBox.translation_x >= 0) :
+            (Main.layoutManager.panelBox.translation_x <= 0);
+
+        const relative_x = (strong || panelIsHereOrMid) ? theVeryEnd : 0;
+
+        const thisAnimation =
+            (relative_x === 0) ? direction :
+                (isRight ? ANIMATION_RIGHTRIGHT : ANIMATION_LEFTLEFT);
+
+        this.#ongoingAnimation = thisAnimation;
+
         Main.layoutManager.panelBox.ease({
-            translation_x: (-Main.layoutManager.panelBox.x),
-            duration: dur, mode: Clutter.AnimationMode.EASE_IN_OUT_BACK, onComplete: callb
+            translation_x: relative_x,
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => {
+                if (this.#ongoingAnimation === thisAnimation)
+                    this.#ongoingAnimation = ANIMATION_NONE;
+            }
         });
+        return true;
+    }
+
+    flickRight(dur, strong) {
+        this.flickSideways(ANIMATION_RIGHT, dur, strong);
+    }
+
+    flickLeft(dur, strong) {
+        this.flickSideways(ANIMATION_LEFT, dur, strong);
     }
 
 
-    scrollBehaviour(a, event) {
-        if (event.get_scroll_direction() == 2) {
-            this.flickRight(DURATION_FLICK, _ => {
-//                Main.layoutManager.panelBox.width = global.screen_width / 2.5;
-                this.flickRight(DURATION_ASIDE, _ => {
-                    this.flickMiddle(DURATION_RETURN, _ => {
-//                        Main.layoutManager.panelBox.width = get_panel_width();
+    flickDown(dur, callb) {
+        if (Main.layoutManager.panelBox.translation_y == 0) return false;
+        Main.layoutManager.panelBox.ease({
+            translation_y: 0,
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => { callb() }
+        });
+        return true;
+    }
+
+
+    flickUp(dur, callb) {
+
+        if (Main.layoutManager.panelBox.translation_y < 0) return false;
+        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
+        Main.layoutManager.panelBox.ease({
+            translation_y: up_y,
+            duration: dur,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: _ => { callb() }
+        });
+        return true;
+    }
+
+    scrollBehaviour(_, event) {
+        const direction = event.get_scroll_direction();
+        const strongFlickLeft = event.get_scroll_delta()[0] > 2;
+        const strongFlickRight = event.get_scroll_delta()[0] < (-2);
+
+        switch (direction) {
+            case SCROLL_DIRECTION_UP:
+                this.flickUp(DURATION_FLICK, _ => {
+                    const dur = DURATION_ASIDE_VERYLONG;
+                    this.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
+                    this.flickUp(dur, _ => {
+                        this.flickDown(DURATION_RETURN);
                     });
                 });
-            });
-        } else if (event.get_scroll_direction() == 3) {
-            this.flickLeft(DURATION_FLICK, _ => {
-//                Main.layoutManager.panelBox.width = global.screen_width / 2.5;
-                this.flickLeft(DURATION_ASIDE, _ => {
-                    this.flickMiddle(DURATION_RETURN, _ => {
-//                        Main.layoutManager.panelBox.width = get_panel_width();
-                    });
-                });
-            });
-        };
+                break;
+            case SCROLL_DIRECTION_DOWN:
+                this.flickDown(DURATION_FLICK) &&
+                    this.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+                break;
+            case SCROLL_DIRECTION_RIGHT:
+                this.flickRight(DURATION_FLICK);
+                break;
+            case SCROLL_DIRECTION_LEFT:
+                this.flickLeft(DURATION_FLICK);
+                break;
+            default:
+                if (strongFlickLeft) {
+                    this.flickLeft(DURATION_FLICK, true);
+                } else if (strongFlickRight) {
+                    this.flickRight(DURATION_FLICK, true);
+                }
+                break;
+        }
+
     }
 
     enableScrollBehaviour() {
