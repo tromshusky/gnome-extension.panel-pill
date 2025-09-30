@@ -59,7 +59,7 @@ export default class PanelPillExtension extends Extension {
     #timeoutRoundnessID = null;
     #timeoutStretchID = null;
 
-    #ongoingAnimation = false;
+    #ongoingAnimation = ANIMATION_NONE;
 
     enable() {
         global._panelpill = {};
@@ -234,6 +234,7 @@ export default class PanelPillExtension extends Extension {
 
 
     flickLeft(dur, strong) {
+        global._panelpill.strongFlickLeftRequest ||= strong;
         const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
         const alreadyMovingLeft = this.#ongoingAnimation === ANIMATION_LEFT;
         const requestEnforcingLeftleft = alreadyMovingLeft && strong;
@@ -253,6 +254,7 @@ export default class PanelPillExtension extends Extension {
 
         this.#ongoingAnimation = thisAnimation;
 
+        global._panelpill.strongFlickLeftCall ||= strong;
         Main.layoutManager.panelBox.ease({
             translation_x: relative_x,
             duration: dur,
@@ -325,12 +327,12 @@ export default class PanelPillExtension extends Extension {
         return true;
     }
 
-    scrollBehaviour(a, event) {
+    scrollBehaviour(_, event) {
+        const direction = event.get_scroll_direction();
         const strongFlickLeft = event.get_scroll_delta()[0] > 2;
         const strongFlickRight = event.get_scroll_delta()[0] < (-2);
-        global._panelpill.strongFlickLeft ||= strongFlickLeft;
 
-        switch (event.get_scroll_direction()) {
+        switch (direction) {
             case SCROLL_DIRECTION_UP:
                 this.flickUp(DURATION_FLICK, _ => {
                     const dur = DURATION_ASIDE_VERYLONG;
@@ -345,12 +347,17 @@ export default class PanelPillExtension extends Extension {
                     this.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
                 break;
             case SCROLL_DIRECTION_RIGHT:
-                this.flickRight(DURATION_FLICK, strongFlickRight);
+                this.flickRight(DURATION_FLICK);
                 break;
             case SCROLL_DIRECTION_LEFT:
-                this.flickLeft(DURATION_FLICK, strongFlickLeft);
+                this.flickLeft(DURATION_FLICK);
                 break;
             default:
+                if (strongFlickLeft) {
+                    this.flickLeft(DURATION_FLICK, true);
+                } else if (strongFlickRight) {
+                    this.flickRight(DURATION_FLICK, true);
+                }
                 break;
         }
 
