@@ -39,7 +39,7 @@ export default class FlickPanel {
             (isRight ? ANIMATION.RIGHTRIGHT : ANIMATION.LEFTLEFT);
         this.#ongoingAnimation = thisAnimation;
         Main.layoutManager.panelBox.ease({
-            translationX: relative_x,
+            translation_x: relative_x,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: () => {
