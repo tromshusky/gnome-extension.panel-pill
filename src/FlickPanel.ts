@@ -12,7 +12,7 @@ export default class FlickPanel {
 
     #ongoingAnimation = ANIMATION.NONE;
 
-    sideways(direction1: ANIMATION, duration: number, strong?: boolean) {
+    sideways(direction1: ANIMATION.RIGHT | ANIMATION.LEFT, duration: number, strong?: boolean) {
         // with Here is meant the target side / direction side
         const isRight = direction1 === ANIMATION.RIGHT;
         const theVeryEnd = isRight ?
