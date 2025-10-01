@@ -45,8 +45,8 @@ export default class FlickPanel {
 
         this.#ongoingAnimation = thisAnimation;
 
-        Main.layoutManager.panelBox.ease({
-            translationX: relative_x,
+        Main.layoutManager.panelBox.ease({ // @ts-expect-error 
+            translation_x: relative_x,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: () => {
