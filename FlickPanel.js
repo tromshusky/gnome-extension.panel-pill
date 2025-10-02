@@ -39,6 +39,8 @@ export default class FlickPanel {
             (isRight ? ANIMATION.RIGHTRIGHT : ANIMATION.LEFTLEFT);
         this.#ongoingAnimation = thisAnimation;
         Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
             translation_x: relative_x,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
@@ -59,7 +61,9 @@ export default class FlickPanel {
         if (Main.layoutManager.panelBox.translation_y == 0)
             return false;
         Main.layoutManager.panelBox.ease({
-            translationY: 0,
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: 0,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: callb
@@ -71,7 +75,9 @@ export default class FlickPanel {
             return false;
         const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
         Main.layoutManager.panelBox.ease({
-            translationY: up_y,
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: up_y,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: callb
