@@ -3,8 +3,10 @@ import { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX,
 export default class PanelUI {
     #timeoutFadeinID = null;
     #pill;
+    #translation_x;
     constructor(pill) {
         this.#pill = pill;
+        this.#translation_x = null;
     }
     enable() {
         this.setPillX();
@@ -27,6 +29,8 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = Main.panel.height;
     }
     resetX() {
+        this.#translation_x = Main.layoutManager.panelBox.translation_x;
+        Main.layoutManager.panelBox.translation_x = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
     }
@@ -40,6 +44,8 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = PANEL_HEIGHT;
     }
     setPillX() {
+        if (this.#translation_x !== null)
+            Main.layoutManager.panelBox.translation_x = this.#translation_x;
         const new_width = this.#getPanelWidth();
         const new_x = (global.screen_width - new_width) / 2;
         Main.layoutManager.panelBox.x = new_x;
