@@ -13,6 +13,10 @@ var ANIMATION;
 })(ANIMATION || (ANIMATION = {}));
 export default class FlickPanel {
     #ongoingAnimation = ANIMATION.NONE;
+    #pill;
+    constructor(pill) {
+        this.#pill = pill;
+    }
     sideways(direction1, duration, strong) {
         // with Here is meant the target side / direction side
         const isRight = direction1 === ANIMATION.RIGHT;
@@ -60,6 +64,7 @@ export default class FlickPanel {
     down(duration, callb) {
         if (Main.layoutManager.panelBox.translation_y == 0)
             return false;
+        this.#pill.panelUI.setPillX();
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
@@ -74,6 +79,7 @@ export default class FlickPanel {
         if (Main.layoutManager.panelBox.translation_y < 0)
             return false;
         const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
+        this.#pill.panelUI.resetX();
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
