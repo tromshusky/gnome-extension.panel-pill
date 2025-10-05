@@ -13,13 +13,20 @@ export default class OverviewFix {
     constructor(pill: PanelPillExtension) {
         this.#panelPill = pill;
     }
+
+    fixPanelPositions() {
+        Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
+    }
+
+    overviewClosingDelayedBehaviour() {
+        this.#panelPill.panelUI.makeRound();
+        this.fixPanelPositions();
+    }
+
     overviewClosingBehaviour() {
-        const round = this.#panelPill.panelUI.makeRound
-        round();
-        // for some funny reason its better to repeat after a delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
-        this.#timeoutRoundnessID = setTimeout(round.bind(this), ROUND_CORNER_DELAY);
+        this.#timeoutRoundnessID = setTimeout(this.overviewClosingDelayedBehaviour.bind(this), ROUND_CORNER_DELAY);
     }
 
     enableOverviewClosingBehaviour() {
@@ -38,7 +45,7 @@ export default class OverviewFix {
     }
 
     overviewOpeningBehaviour() {
-        Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
+        this.fixPanelPositions();
     }
 
     enableOverviewOpeningBehaviour() {
