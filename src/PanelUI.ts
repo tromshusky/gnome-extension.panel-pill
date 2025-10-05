@@ -6,9 +6,9 @@ import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW
 export default class PanelUI {
     #timeoutFadeinID: GLib.Source | null = null;
     #pill: PanelPillExtension;
-    #translation_x : number | null;
+    #translation_x: number | null;
 
-    constructor(pill: PanelPillExtension){
+    constructor(pill: PanelPillExtension) {
         this.#pill = pill;
         this.#translation_x = null;
     }
@@ -57,12 +57,14 @@ export default class PanelUI {
     }
 
     setPillX() {
-        if (this.#translation_x !== null)
-        Main.layoutManager.panelBox.translation_x = this.#translation_x;
         const new_width = this.#getPanelWidth();
-        const new_x = (global.screen_width - new_width) / 2;
-        Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.width = new_width;
+        if (this.#translation_x !== null) {
+            Main.layoutManager.panelBox.translation_x = this.#translation_x;
+        } else {
+            const new_x = (global.screen_width - new_width) / 2;
+            Main.layoutManager.panelBox.x = new_x;
+        }
     }
 
     makeRound() {
