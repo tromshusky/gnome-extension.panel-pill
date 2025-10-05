@@ -12,10 +12,9 @@ export default class PanelUI {
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.y = PANEL_Y;
         Main.layoutManager.panelBox.width = new_width;
-        Main.layoutManager.panelBox.height = PANEL_HEIGHT;
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
-        // with panelBox.height = 0 the panel itself stays on the normal height.
-        Main.layoutManager.panelBox.height = 0;
+        // even with panelBox.height = 0 the panel itself stays on the normal height.
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
     }
 
