@@ -13,7 +13,7 @@ export default class Scrolling {
 
     constructor(pill: PanelPillExtension) {
         this.#panelPill = pill;
-        this.#flickPanel = new FlickPanel();
+        this.#flickPanel = new FlickPanel(pill);
     }
     enableScrollBehaviour() {
         if (this.#mainPanelScrollListenerID1 != null)

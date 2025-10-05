@@ -1,32 +1,63 @@
 import GLib from 'gi://GLib';
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX, PANEL_XY_RATIO, PANEL_Y } from "./extension.js";
+import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX, PANEL_XY_RATIO, PANEL_Y } from "./extension.js";
 
 
 export default class PanelUI {
     #timeoutFadeinID: GLib.Source | null = null;
+    #pill: PanelPillExtension;
+
+    constructor(pill: PanelPillExtension){
+        this.#pill = pill;
+    }
 
     enable() {
-        const new_width = this.#getPanelWidth();
-        const new_x = (global.screen_width - new_width) / 2;
-        Main.layoutManager.panelBox.x = new_x;
-        Main.layoutManager.panelBox.y = PANEL_Y;
-        Main.layoutManager.panelBox.width = new_width;
-        // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
-        // even with panelBox.height = 0 the panel itself stays on the normal height.
-        Main.layoutManager.panelBox.height = PANEL_HEIGHT;
-        Main.panel.opacity = PANEL_OPACITY_HIGH;
+        this.setPillX();
+        this.setPillY();
+        this.setPillOpacity();
     }
 
     disable() {
-        Main.layoutManager.panelBox.x = 0;
-        Main.layoutManager.panelBox.y = 0;
-        Main.layoutManager.panelBox.width = global.screen_width;
-        Main.layoutManager.panelBox.height = Main.panel.height;
-        Main.panel.set_style("");
-        this.resetReacticity(PANEL_OPACITY_MAX);
+        this.resetX();
+        this.resetY();
+        this.resetOpacity();
     }
 
+    resetOpacity() {
+        this.resetReactivity(PANEL_OPACITY_MAX);
+    }
+
+    resetStyle() {
+        Main.panel.set_style("");
+    }
+
+    resetY() {
+        Main.layoutManager.panelBox.y = 0;
+        Main.layoutManager.panelBox.height = Main.panel.height;
+    }
+
+    resetX() {
+        Main.layoutManager.panelBox.x = 0;
+        Main.layoutManager.panelBox.width = global.screen_width;
+    }
+
+    setPillOpacity() {
+        Main.panel.opacity = PANEL_OPACITY_HIGH;
+    }
+
+    setPillY() {
+        Main.layoutManager.panelBox.y = PANEL_Y;
+        // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
+        // even with panelBox.height = 0 the panel itself stays on the normal height.
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT;
+    }
+
+    setPillX() {
+        const new_width = this.#getPanelWidth();
+        const new_x = (global.screen_width - new_width) / 2;
+        Main.layoutManager.panelBox.x = new_x;
+        Main.layoutManager.panelBox.width = new_width;
+    }
 
     makeRound() {
         const new_radius = Main.panel.height;
@@ -34,7 +65,7 @@ export default class PanelUI {
     }
 
     #getPanelWidth() {
-        // this code would work, if the panel didnt resize (with accessibility and keyboard indicator)
+        // this code would work, if the panel didnt resize later (with accessibility and keyboard indicator)
         //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
         //        const min_width = elem_width + (Main.panel.height * 8);
         // until there is a nicer fix this will do:
@@ -46,12 +77,12 @@ export default class PanelUI {
     temporarySetReactivityFalse(duration: number) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
-        this.#timeoutFadeinID = setTimeout(this.resetReacticity.bind(this), duration);
+        this.#timeoutFadeinID = setTimeout(this.resetReactivity.bind(this), duration);
         this.setPanelReactivity(false);
         Main.panel.opacity = PANEL_OPACITY_LOW;
     }
 
-    resetReacticity(opacity: number = PANEL_OPACITY_HIGH) {
+    resetReactivity(opacity: number = PANEL_OPACITY_HIGH) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
         this.#timeoutFadeinID = null;

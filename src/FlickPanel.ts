@@ -1,5 +1,5 @@
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
+import PanelPillExtension, { PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
 import Clutter from "gi://Clutter";
 
 
@@ -11,6 +11,11 @@ enum ANIMATION {
 export default class FlickPanel {
 
     #ongoingAnimation = ANIMATION.NONE;
+    #pill: PanelPillExtension;
+
+    constructor(pill: PanelPillExtension) {
+        this.#pill = pill;
+    }
 
     sideways(direction1: ANIMATION.RIGHT | ANIMATION.LEFT, duration: number, strong?: boolean) {
         // with Here is meant the target side / direction side
@@ -70,6 +75,9 @@ export default class FlickPanel {
 
     down(duration: number, callb?: () => void) {
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
+
+        this.#pill.panelUI.setPillX();
+
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
@@ -85,6 +93,9 @@ export default class FlickPanel {
     up(duration: number, callb?: () => void) {
         if (Main.layoutManager.panelBox.translation_y < 0) return false;
         const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
+
+        this.#pill.panelUI.resetX();
+
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 

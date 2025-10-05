@@ -26,7 +26,7 @@ export default class PanelPillExtension extends Extension {
 
     constructor(args: ExtensionMetadata) {
         super(args);
-        this.panelUI = new PanelUI();
+        this.panelUI = new PanelUI(this);
         this.scrolling = new Scrolling(this);
         this.overviewFix = new OverviewFix(this);
     }
