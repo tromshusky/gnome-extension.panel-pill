@@ -32,7 +32,6 @@ export default class Scrolling {
         const strongFlickLeft = event.get_scroll_delta()[0] > 2;
         const strongFlickRight = event.get_scroll_delta()[0] < (-2);
 
-	// "Up is Down" - Pirates of the Carribbean
         const realScrollUp = Clutter.ScrollDirection.DOWN;
         const realScrollDown = Clutter.ScrollDirection.UP;
         const realScrollRight = Clutter.ScrollDirection.LEFT;

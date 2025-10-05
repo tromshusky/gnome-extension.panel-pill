@@ -1,6 +1,6 @@
 import GLib from 'gi://GLib';
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX, PANEL_XY_RATIO, PANEL_Y } from "./extension.js";
+import { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX, PANEL_XY_RATIO, PANEL_Y } from "./extension.js";
 
 
 export default class PanelUI {
@@ -12,6 +12,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.y = PANEL_Y;
         Main.layoutManager.panelBox.width = new_width;
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT;
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with panelBox.height = 0 the panel itself stays on the normal height.
         Main.layoutManager.panelBox.height = 0;
@@ -22,6 +23,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
+        Main.layoutManager.panelBox.height = Main.panel.height;
         Main.panel.set_style("");
         this.resetReacticity(PANEL_OPACITY_MAX);
     }

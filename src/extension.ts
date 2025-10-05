@@ -8,11 +8,13 @@ export const DURATION_ASIDE_VERYLONG = 1000000;
 export const DURATION_FADEIN = 800;
 export const DURATION_FLICK = 200;
 export const DURATION_RETURN = 2000;
+// PANEL_HEIGHT will also be the gap above fullscreen windows
+export const PANEL_HEIGHT = 4;
 export const PANEL_OPACITY_HIGH = 225;
 export const PANEL_OPACITY_LOW = 100;
 export const PANEL_OPACITY_MAX = 255;
 export const PANEL_XY_RATIO = 20;
-export const PANEL_Y = 4;
+export const PANEL_Y = 0;
 export const STILL_ON_SCREEN_PIXEL = 4;
 export const ROUND_CORNER_DELAY = 1000;
 
