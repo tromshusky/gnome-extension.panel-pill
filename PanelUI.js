@@ -44,12 +44,15 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = PANEL_HEIGHT;
     }
     setPillX() {
-        if (this.#translation_x !== null)
-            Main.layoutManager.panelBox.translation_x = this.#translation_x;
         const new_width = this.#getPanelWidth();
-        const new_x = (global.screen_width - new_width) / 2;
-        Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.width = new_width;
+        if (this.#translation_x !== null) {
+            Main.layoutManager.panelBox.translation_x = this.#translation_x;
+        }
+        else {
+            const new_x = (global.screen_width - new_width) / 2;
+            Main.layoutManager.panelBox.x = new_x;
+        }
     }
     makeRound() {
         const new_radius = Main.panel.height;
