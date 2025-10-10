@@ -44,21 +44,20 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = PANEL_HEIGHT;
     }
     setPillXAkaLeftRight() {
-        const new_width = this.#getPanelWidth();
+        const new_width = this.calcBestPanelWidth();
         Main.layoutManager.panelBox.width = new_width;
-        if (this.#translation_x !== null) {
-            Main.layoutManager.panelBox.translation_x = this.#translation_x;
-        }
-        else {
-            const new_x = (global.screen_width - new_width) / 2;
-            Main.layoutManager.panelBox.x = new_x;
-        }
+        Main.layoutManager.panelBox.translation_x = 0;
+        const new_x = (global.screen_width - new_width) / 2;
+        Main.layoutManager.panelBox.x = new_x;
+    }
+    setPillTranslationXAkaLeftRight(value) {
+        Main.layoutManager.panelBox.translation_x = value;
     }
     makeRound() {
         const new_radius = Main.panel.height;
         Main.panel.set_style("border-radius: " + new_radius + "px;");
     }
-    #getPanelWidth() {
+    calcBestPanelWidth() {
         // this code would work, if the panel didnt resize later (with accessibility and keyboard indicator)
         //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
         //        const min_width = elem_width + (Main.panel.height * 8);
