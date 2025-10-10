@@ -71,11 +71,13 @@ export default class FlickPanel {
     down(duration, callb) {
         if (Main.layoutManager.panelBox.translation_y == 0)
             return false;
-        this.#pill.panelUI.setPillXAkaLeftRight();
+        //        this.#pill.panelUI.setPillXAkaLeftRight();
+        Main.layoutManager.panelBox.x = 300;
+        Main.layoutManager.panelBox.translation_x = this.#specialTranslationX();
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
-            translation_y: this.#specialTranslationX(),
+            translation_y: 0,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: callb
