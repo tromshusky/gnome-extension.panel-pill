@@ -72,6 +72,14 @@ export default class FlickPanel {
         return this.sideways(ANIMATION.LEFT, duration, strong);
     }
 
+    #specialTranslationX() {
+        const [mouse_x] = global.get_pointer();
+        const mouseRight = mouse_x < (global.screen_width / 3);
+        const mouseLeft = mouse_x > (global.screen_width / 1.5);
+        return mouseLeft ? (- Main.layoutManager.panelBox.x) :
+            mouseRight ? Main.layoutManager.panelBox.x : 0;
+    }
+
 
     down(duration: number, callb?: () => void) {
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
@@ -81,7 +89,7 @@ export default class FlickPanel {
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
-            translation_y: 0,
+            translation_y: this.#specialTranslationX(),
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: callb
