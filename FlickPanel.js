@@ -1,5 +1,5 @@
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
+import { PANEL_HEIGHT, PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
 import Clutter from "gi://Clutter";
 var ANIMATION;
 (function (ANIMATION) {
@@ -61,26 +61,29 @@ export default class FlickPanel {
     left(duration, strong) {
         return this.sideways(ANIMATION.LEFT, duration, strong);
     }
-    #specialTranslationX() {
+    #calculateTranslationXBasedOnMouse() {
         const [mouse_x] = global.get_pointer();
         const mouseRight = mouse_x < (global.screen_width / 3);
         const mouseLeft = mouse_x > (global.screen_width / 1.5);
         return mouseLeft ? (-Main.layoutManager.panelBox.x) :
             mouseRight ? Main.layoutManager.panelBox.x : 0;
     }
-    down(duration, callb) {
+    down(duration) {
         if (Main.layoutManager.panelBox.translation_y == 0)
             return false;
-        //        this.#pill.panelUI.setPillXAkaLeftRight();
+        const new_translation_x = this.#calculateTranslationXBasedOnMouse();
         this.#pill.panelUI.setPillXAkaLeftRight();
-        this.#pill.panelUI.setPillTranslationXAkaLeftRight(this.#specialTranslationX());
+        this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
             translation_y: 0,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: callb
+            onComplete: () => {
+                Main.layoutManager.panelBox.height = PANEL_HEIGHT;
+            }
         });
         return true;
     }
