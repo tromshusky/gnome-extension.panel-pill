@@ -89,7 +89,7 @@ export default class FlickPanel {
 
         this.#pill.panelUI.setPillXAkaLeftRight();
         this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
-                Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
 
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
