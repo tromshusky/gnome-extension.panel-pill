@@ -76,7 +76,7 @@ export default class FlickPanel {
     down(duration: number, callb?: () => void) {
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
 
-        this.#pill.panelUI.setPillX();
+        this.#pill.panelUI.setPillLeftRight();
 
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
@@ -94,7 +94,7 @@ export default class FlickPanel {
         if (Main.layoutManager.panelBox.translation_y < 0) return false;
         const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
 
-        this.#pill.panelUI.resetX();
+        this.#pill.panelUI.resetLeftRight();
 
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y

@@ -14,14 +14,14 @@ export default class PanelUI {
     }
 
     enable() {
-        this.setPillX();
-        this.setPillY();
+        this.setPillLeftRight();
+        this.setPillUpDown();
         this.setPillOpacity();
     }
 
     disable() {
-        this.resetX();
-        this.resetY();
+        this.resetLeftRight();
+        this.resetUpDown();
         this.resetOpacity();
     }
 
@@ -33,12 +33,12 @@ export default class PanelUI {
         Main.panel.set_style("");
     }
 
-    resetY() {
+    resetUpDown() {
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.height = Main.panel.height;
     }
 
-    resetX() {
+    resetLeftRight() {
         this.#translation_x = Main.layoutManager.panelBox.translation_x;
         Main.layoutManager.panelBox.translation_x = 0;
         Main.layoutManager.panelBox.x = 0;
@@ -49,14 +49,14 @@ export default class PanelUI {
         Main.panel.opacity = PANEL_OPACITY_HIGH;
     }
 
-    setPillY() {
+    setPillUpDown() {
         Main.layoutManager.panelBox.y = PANEL_Y;
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // even with panelBox.height = 0 the panel itself stays on the normal height.
         Main.layoutManager.panelBox.height = PANEL_HEIGHT;
     }
 
-    setPillX() {
+    setPillLeftRight() {
         const new_width = this.#getPanelWidth();
         Main.layoutManager.panelBox.width = new_width;
         if (this.#translation_x !== null) {
