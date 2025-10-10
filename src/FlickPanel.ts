@@ -87,6 +87,7 @@ export default class FlickPanel {
 
 //        this.#pill.panelUI.setPillXAkaLeftRight();
         Main.layoutManager.panelBox.x = 300;
+        Main.layoutManager.panelBox.width = 500;
         Main.layoutManager.panelBox.translation_x = this.#specialTranslationX();
 
         Main.layoutManager.panelBox.ease({
