@@ -73,7 +73,7 @@ export default class FlickPanel {
         return this.sideways(ANIMATION.LEFT, duration, strong);
     }
 
-    #specialTranslationX() {
+    #calculateTranslationXBasedOnMouse() {
         const [mouse_x] = global.get_pointer();
         const mouseRight = mouse_x < (global.screen_width / 3);
         const mouseLeft = mouse_x > (global.screen_width / 1.5);
@@ -85,19 +85,33 @@ export default class FlickPanel {
     down(duration: number, callb?: () => void) {
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
 
-        const new_translation_x = this.#specialTranslationX();
-        
+        const new_translation_x = this.#calculateTranslationXBasedOnMouse();
+
         this.#pill.panelUI.setPillXAkaLeftRight();
-        this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
+        //    this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
+
+
+        const easeDown = () => {
+            Main.layoutManager.panelBox.ease({
+                // somehow the library in use doesnt support translation_x and translation_y
+                // @ts-expect-error 
+                translation_y: 0,
+                duration: duration,
+                mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+                onComplete: callb
+            });
+        };
 
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
-            translation_y: 0,
-            duration: duration,
+            translation_x: new_translation_x,
+            duration: 0,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: callb
+            onComplete: easeDown
         });
+
+
         return true;
     }
 
