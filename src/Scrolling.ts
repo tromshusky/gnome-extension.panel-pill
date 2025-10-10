@@ -28,6 +28,7 @@ export default class Scrolling {
     }
 
     scrollBehaviour(_: Panel, event: Clutter.Event) {
+        global._panelpill.scrollEvent = event;
         const direction = event.get_scroll_direction();
         const strongFlickLeft = event.get_scroll_delta()[0] > 2;
         const strongFlickRight = event.get_scroll_delta()[0] < (-2);
