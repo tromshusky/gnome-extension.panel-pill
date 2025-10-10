@@ -46,8 +46,8 @@ export default class Scrolling {
                     this.#flickPanel.down(DURATION_RETURN);
                 });
             });
-        } else if (direction === realScrollDown) {
-            this.#flickPanel.down(DURATION_FLICK) &&
+        } else if (direction === realScrollDown) { //TODO remove 10
+            this.#flickPanel.down(10*DURATION_FLICK) &&
                 this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
         } else if (direction === realScrollRight) {
             this.#flickPanel.right(DURATION_FLICK);
