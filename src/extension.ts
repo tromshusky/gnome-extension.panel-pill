@@ -5,7 +5,7 @@ import PanelUI from './PanelUI.js';
 
 export const DURATION_ASIDE = 7000;
 export const DURATION_ASIDE_VERYLONG = 1000000;
-export const DURATION_FADEIN = 800;
+export const DURATION_FADEIN = 10; // actually useless with double up scroll
 export const DURATION_FLICK = 200;
 export const DURATION_RETURN = 2000;
 // PANEL_HEIGHT will also be the gap above fullscreen windows
