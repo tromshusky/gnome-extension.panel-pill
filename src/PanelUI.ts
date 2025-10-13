@@ -6,7 +6,6 @@ import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW
 export default class PanelUI {
     #timeoutFadeinID: GLib.Source | null = null;
     #pill: PanelPillExtension;
-    #clickStyle: string = "";
 
     constructor(pill: PanelPillExtension) {
         this.#pill = pill;
@@ -67,7 +66,7 @@ export default class PanelUI {
     }
 
     makeRound() {
-        this.updateStyle();
+        this.setRoundStyle();
     }
 
     calcBestWidth() {
@@ -95,25 +94,25 @@ export default class PanelUI {
         Main.panel.opacity = opacity;
     }
 
-    setReactivity(value: boolean) {
+    setReactivity(rea: boolean) {
         Main.panel.get_children().map(e => {
             e.get_children().map(f => {
                 const g = f.first_child;
-                g.reactive = value;
+                g.reactive = rea;
                 const h = g.first_child;
                 if (h != null) {
                     h.get_children().map(i => {
-                        i.reactive = value;
+                        i.reactive = rea;
                     });
                 }
             });
         });
-        this.#clickStyle = value ? "" : "pointer-events: none;";
-        this.updateStyle();
-        Main.panel.opacity = value ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
+        this.setRoundStyle();
+        Main.panel.reactive = rea;
+        Main.panel.opacity = rea ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
     }
 
-    updateStyle() {
-        Main.panel.set_style("border-radius: " + Main.panel.height + "px;" + this.#clickStyle);
+    setRoundStyle() {
+        Main.panel.set_style("border-radius: " + Main.panel.height + "px;");
     }
 }
