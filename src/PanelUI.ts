@@ -26,7 +26,7 @@ export default class PanelUI {
     }
 
     resetOpacity() {
-        this.resetReactivity(PANEL_OPACITY_MAX);
+        this.resetReactivityToTrue(PANEL_OPACITY_MAX);
     }
 
     resetStyle() {
@@ -57,7 +57,7 @@ export default class PanelUI {
     }
 
     setPillXAkaLeftRight() {
-        const new_width = this.calcBestPanelWidth();
+        const new_width = this.calcBestWidth();
         Main.layoutManager.panelBox.width = new_width;
         Main.layoutManager.panelBox.translation_x = 0;
         const new_x = (global.screen_width - new_width) / 2;
@@ -73,7 +73,7 @@ export default class PanelUI {
         Main.panel.set_style("border-radius: " + new_radius + "px;");
     }
 
-    calcBestPanelWidth() {
+    calcBestWidth() {
         // this code would work, if the panel didnt resize later (with accessibility and keyboard indicator)
         //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
         //        const min_width = elem_width + (Main.panel.height * 8);
@@ -86,20 +86,20 @@ export default class PanelUI {
     temporarySetReactivityFalse(duration: number) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
-        this.#timeoutFadeinID = setTimeout(this.resetReactivity.bind(this), duration);
-        this.setPanelReactivity(false);
+        this.#timeoutFadeinID = setTimeout(this.resetReactivityToTrue.bind(this), duration);
+        this.setReactivity(false);
         Main.panel.opacity = PANEL_OPACITY_LOW;
     }
 
-    resetReactivity(opacity: number = PANEL_OPACITY_HIGH) {
+    resetReactivityToTrue(opacity: number = PANEL_OPACITY_HIGH) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
         this.#timeoutFadeinID = null;
-        this.setPanelReactivity(true);
+        this.setReactivity(true);
         Main.panel.opacity = opacity;
     }
 
-    setPanelReactivity(value: boolean) {
+    setReactivity(value: boolean) {
         Main.panel.get_children().map(e => {
             e.get_children().map(f => { f.first_child.reactive = value; });
         });
