@@ -53,6 +53,7 @@ export default class Scrolling {
         if (direction === realScrollUp) {
             if (this.#doubleScrollBlockerTimoutID == null) {
                 this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+
                 if (this.#panelHideStrength == 0) {
                     this.#panelPill.panelUI.setReactivity(false);
                     this.#panelHideStrength = 1;
