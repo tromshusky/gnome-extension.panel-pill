@@ -88,7 +88,6 @@ export default class PanelUI {
             clearTimeout(this.#timeoutFadeinID);
         this.#timeoutFadeinID = setTimeout(this.resetReactivityToTrue.bind(this), duration);
         this.setReactivity(false);
-        Main.panel.opacity = PANEL_OPACITY_LOW;
     }
 
     resetReactivityToTrue(opacity: number = PANEL_OPACITY_HIGH) {
@@ -103,5 +102,6 @@ export default class PanelUI {
         Main.panel.get_children().map(e => {
             e.get_children().map(f => { f.first_child.reactive = value; });
         });
+        Main.panel.opacity = value ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
     }
 }
