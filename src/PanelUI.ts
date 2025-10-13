@@ -6,6 +6,7 @@ import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW
 export default class PanelUI {
     #timeoutFadeinID: GLib.Source | null = null;
     #pill: PanelPillExtension;
+    #clickStyle: string = "";
 
     constructor(pill: PanelPillExtension) {
         this.#pill = pill;
@@ -66,8 +67,7 @@ export default class PanelUI {
     }
 
     makeRound() {
-        const new_radius = Main.panel.height;
-        Main.panel.set_style("border-radius: " + new_radius + "px;");
+        this.updateStyle();
     }
 
     calcBestWidth() {
@@ -108,6 +108,12 @@ export default class PanelUI {
                 }
             });
         });
+        this.#clickStyle = value ? "" : "pointer-events: none;";
+        this.updateStyle();
         Main.panel.opacity = value ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
+    }
+
+    updateStyle() {
+        Main.panel.set_style("border-radius: " + Main.panel.height + "px;" + this.#clickStyle);
     }
 }
