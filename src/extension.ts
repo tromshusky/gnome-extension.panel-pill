@@ -17,6 +17,7 @@ export const PANEL_XY_RATIO = 20;
 export const PANEL_Y = 0;
 export const STILL_ON_SCREEN_PIXEL = 4;
 export const ROUND_CORNER_DELAY = 1000;
+export const DOUBLE_SCROLL_DELAY = 1000;
 
 export default class PanelPillExtension extends Extension {
 

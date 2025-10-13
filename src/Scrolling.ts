@@ -1,21 +1,22 @@
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Panel } from "resource:///org/gnome/shell/ui/panel.js";
-import PanelPillExtension, { DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
+import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
 import FlickPanel from "./FlickPanel.js";
+import GLib from "gi://GLib";
 
 
 
 export default class Scrolling {
-    #mainPanelScrollListenerID1: number | null = null;
-    #panelPill: PanelPillExtension;
+    #doubleScrollBlockerTimoutID: GLib.Source | null = null;
     #flickPanel: FlickPanel;
-    #panelHideStrength: number;
+    #mainPanelScrollListenerID1: number | null = null;
+    #panelHideStrength: number = 0;
+    #panelPill: PanelPillExtension;
 
     constructor(pill: PanelPillExtension) {
         this.#panelPill = pill;
         this.#flickPanel = new FlickPanel(pill);
-        this.#panelHideStrength = 0;
     }
 
     enableScrollBehaviour() {
@@ -30,6 +31,13 @@ export default class Scrolling {
         this.#mainPanelScrollListenerID1 = null;
     }
 
+
+    unblockDoubleScroll() {
+        if (this.#doubleScrollBlockerTimoutID != null) {
+            clearTimeout(this.#doubleScrollBlockerTimoutID);
+        }
+    }
+
     scrollBehaviour(_: Panel, event: Clutter.Event) {
 
         const direction = event.get_scroll_direction();
@@ -42,27 +50,34 @@ export default class Scrolling {
         const realScrollLeft = Clutter.ScrollDirection.RIGHT;
 
         if (direction === realScrollUp) {
-            if (this.#panelHideStrength == 0) {
-                this.#panelPill.panelUI.setReactivity(false);
-                this.#panelHideStrength = 1;
-            } else if (this.#panelHideStrength == 1) {
-                this.#flickPanel.up(DURATION_FLICK, () => {
-                    const dur = DURATION_ASIDE_VERYLONG;
-                    this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
-                    this.#flickPanel.up(dur, () => {
-                        this.#flickPanel.down(DURATION_RETURN);
+            if (this.#doubleScrollBlockerTimoutID == null) {
+                this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+                if (this.#panelHideStrength == 0) {
+                    this.#panelPill.panelUI.setReactivity(false);
+                    this.#panelHideStrength = 1;
+                } else if (this.#panelHideStrength == 1) {
+                    this.#flickPanel.up(DURATION_FLICK, () => {
+                        const dur = DURATION_ASIDE_VERYLONG;
+                        this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
+                        this.#flickPanel.up(dur, () => {
+                            this.#flickPanel.down(DURATION_RETURN);
+                        });
                     });
-                });
-                this.#panelHideStrength = 2;
+                    this.#panelHideStrength = 2;
+                }
             }
         } else if (direction === realScrollDown) {
-            if (this.#panelHideStrength == 2) {
-                this.#flickPanel.down(DURATION_FLICK);
-                this.#panelHideStrength = 1;
-                this.#panelPill.panelUI.setReactivity(false);
-            } else if (this.#panelHideStrength == 1) {
-                this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
-                this.#panelHideStrength = 0;
+            if (this.#doubleScrollBlockerTimoutID == null) {
+                this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+
+                if (this.#panelHideStrength == 2) {
+                    this.#flickPanel.down(DURATION_FLICK);
+                    this.#panelHideStrength = 1;
+                    this.#panelPill.panelUI.setReactivity(false);
+                } else if (this.#panelHideStrength == 1) {
+                    this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+                    this.#panelHideStrength = 0;
+                }
             }
         } else if (direction === realScrollRight) {
             this.#flickPanel.right(DURATION_FLICK);
