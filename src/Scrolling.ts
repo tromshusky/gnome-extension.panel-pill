@@ -35,6 +35,7 @@ export default class Scrolling {
     unblockDoubleScroll() {
         if (this.#doubleScrollBlockerTimoutID != null) {
             clearTimeout(this.#doubleScrollBlockerTimoutID);
+            this.#doubleScrollBlockerTimoutID = null;
         }
     }
 
