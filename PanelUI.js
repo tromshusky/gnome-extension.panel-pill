@@ -3,10 +3,9 @@ import { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX,
 export default class PanelUI {
     #timeoutFadeinID = null;
     #pill;
-    #translation_x;
+    #clickStyle = "";
     constructor(pill) {
         this.#pill = pill;
-        this.#translation_x = null;
     }
     enable() {
         this.setPillXAkaLeftRight();
@@ -19,7 +18,7 @@ export default class PanelUI {
         this.resetOpacity();
     }
     resetOpacity() {
-        this.resetReactivity(PANEL_OPACITY_MAX);
+        this.resetReactivityToTrue(PANEL_OPACITY_MAX);
     }
     resetStyle() {
         Main.panel.set_style("");
@@ -29,7 +28,6 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = Main.panel.height;
     }
     resetXAkaLeftRight() {
-        this.#translation_x = Main.layoutManager.panelBox.translation_x;
         Main.layoutManager.panelBox.translation_x = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
@@ -44,7 +42,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = PANEL_HEIGHT;
     }
     setPillXAkaLeftRight() {
-        const new_width = this.calcBestPanelWidth();
+        const new_width = this.calcBestWidth();
         Main.layoutManager.panelBox.width = new_width;
         Main.layoutManager.panelBox.translation_x = 0;
         const new_x = (global.screen_width - new_width) / 2;
@@ -54,10 +52,9 @@ export default class PanelUI {
         Main.layoutManager.panelBox.translation_x = value;
     }
     makeRound() {
-        const new_radius = Main.panel.height;
-        Main.panel.set_style("border-radius: " + new_radius + "px;");
+        this.updateStyle();
     }
-    calcBestPanelWidth() {
+    calcBestWidth() {
         // this code would work, if the panel didnt resize later (with accessibility and keyboard indicator)
         //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
         //        const min_width = elem_width + (Main.panel.height * 8);
@@ -69,20 +66,34 @@ export default class PanelUI {
     temporarySetReactivityFalse(duration) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
-        this.#timeoutFadeinID = setTimeout(this.resetReactivity.bind(this), duration);
-        this.setPanelReactivity(false);
-        Main.panel.opacity = PANEL_OPACITY_LOW;
+        this.#timeoutFadeinID = setTimeout(this.resetReactivityToTrue.bind(this), duration);
+        this.setReactivity(false);
     }
-    resetReactivity(opacity = PANEL_OPACITY_HIGH) {
+    resetReactivityToTrue(opacity = PANEL_OPACITY_HIGH) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
         this.#timeoutFadeinID = null;
-        this.setPanelReactivity(true);
+        this.setReactivity(true);
         Main.panel.opacity = opacity;
     }
-    setPanelReactivity(value) {
+    setReactivity(value) {
         Main.panel.get_children().map(e => {
-            e.get_children().map(f => { f.first_child.reactive = value; });
+            e.get_children().map(f => {
+                const g = f.first_child;
+                g.reactive = value;
+                const h = g.first_child;
+                if (h != null) {
+                    h.get_children().map(i => {
+                        i.reactive = value;
+                    });
+                }
+            });
         });
+        this.#clickStyle = value ? "" : "pointer-events: none;";
+        this.updateStyle();
+        Main.panel.opacity = value ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
+    }
+    updateStyle() {
+        Main.panel.set_style("border-radius: " + Main.panel.height + "px;" + this.#clickStyle);
     }
 }

@@ -1,11 +1,13 @@
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
+import { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
 import FlickPanel from "./FlickPanel.js";
 export default class Scrolling {
-    #mainPanelScrollListenerID1 = null;
-    #panelPill;
+    #doubleScrollBlockerTimoutID = null;
     #flickPanel;
+    #mainPanelScrollListenerID1 = null;
+    #panelHideStrength = 0;
+    #panelPill;
     constructor(pill) {
         this.#panelPill = pill;
         this.#flickPanel = new FlickPanel(pill);
@@ -20,6 +22,12 @@ export default class Scrolling {
             Main.panel.disconnect(this.#mainPanelScrollListenerID1);
         this.#mainPanelScrollListenerID1 = null;
     }
+    unblockDoubleScroll() {
+        if (this.#doubleScrollBlockerTimoutID != null) {
+            clearTimeout(this.#doubleScrollBlockerTimoutID);
+            this.#doubleScrollBlockerTimoutID = null;
+        }
+    }
     scrollBehaviour(_, event) {
         const direction = event.get_scroll_direction();
         const strongFlickLeft = event.get_scroll_delta()[0] > 2;
@@ -29,17 +37,37 @@ export default class Scrolling {
         const realScrollRight = Clutter.ScrollDirection.LEFT;
         const realScrollLeft = Clutter.ScrollDirection.RIGHT;
         if (direction === realScrollUp) {
-            this.#flickPanel.up(DURATION_FLICK, () => {
-                const dur = DURATION_ASIDE_VERYLONG;
-                this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
-                this.#flickPanel.up(dur, () => {
-                    this.#flickPanel.down(DURATION_RETURN);
-                });
-            });
+            if (this.#doubleScrollBlockerTimoutID == null) {
+                this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+                if (this.#panelHideStrength == 0) {
+                    this.#panelPill.panelUI.setReactivity(false);
+                    this.#panelHideStrength = 1;
+                }
+                else if (this.#panelHideStrength == 1) {
+                    this.#flickPanel.up(DURATION_FLICK, () => {
+                        const dur = DURATION_ASIDE_VERYLONG;
+                        this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
+                        this.#flickPanel.up(dur, () => {
+                            this.#flickPanel.down(DURATION_RETURN);
+                        });
+                    });
+                    this.#panelHideStrength = 2;
+                }
+            }
         }
         else if (direction === realScrollDown) {
-            this.#flickPanel.down(DURATION_FLICK) &&
-                this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+            if (this.#doubleScrollBlockerTimoutID == null) {
+                this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+                if (this.#panelHideStrength == 2) {
+                    this.#flickPanel.down(DURATION_FLICK);
+                    this.#panelHideStrength = 1;
+                    this.#panelPill.panelUI.setReactivity(false);
+                }
+                else if (this.#panelHideStrength == 1) {
+                    this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+                    this.#panelHideStrength = 0;
+                }
+            }
         }
         else if (direction === realScrollRight) {
             this.#flickPanel.right(DURATION_FLICK);

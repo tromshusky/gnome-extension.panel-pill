@@ -63,8 +63,8 @@ export default class FlickPanel {
     }
     #calculateTranslationXBasedOnMouse() {
         const [mouse_x] = global.get_pointer();
-        const mouseLeft = mouse_x < (global.screen_width / 3);
-        const mouseRight = mouse_x > (global.screen_width / 1.5);
+        const mouseRight = mouse_x < (global.screen_width / 3);
+        const mouseLeft = mouse_x > (global.screen_width / 1.5);
         return mouseLeft ? (-Main.layoutManager.panelBox.x) :
             mouseRight ? Main.layoutManager.panelBox.x : 0;
     }
