@@ -6,11 +6,9 @@ import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW
 export default class PanelUI {
     #timeoutFadeinID: GLib.Source | null = null;
     #pill: PanelPillExtension;
-    #translation_x: number | null;
 
     constructor(pill: PanelPillExtension) {
         this.#pill = pill;
-        this.#translation_x = null;
     }
 
     enable() {
@@ -39,7 +37,6 @@ export default class PanelUI {
     }
 
     resetXAkaLeftRight() {
-        this.#translation_x = Main.layoutManager.panelBox.translation_x;
         Main.layoutManager.panelBox.translation_x = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
