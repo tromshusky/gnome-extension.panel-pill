@@ -100,7 +100,16 @@ export default class PanelUI {
 
     setReactivity(value: boolean) {
         Main.panel.get_children().map(e => {
-            e.get_children().map(f => { f.first_child.reactive = value; });
+            e.get_children().map(f => {
+                const g = f.first_child;
+                g.reactive = value;
+                const h = g.first_child;
+                if (h != null) {
+                    h.get_children().map(i => {
+                        i.reactive = value;
+                    });
+                }
+            });
         });
         Main.panel.opacity = value ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
     }
