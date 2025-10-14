@@ -13,21 +13,33 @@ export default class Scrolling {
     #mainPanelScrollListenerID1: number | null = null;
     #panelHideStrength: number = 0;
     #panelPill: PanelPillExtension;
+    #scrollObject: Clutter.Actor | undefined;
 
     constructor(pill: PanelPillExtension) {
         this.#panelPill = pill;
         this.#flickPanel = new FlickPanel(pill);
     }
 
+    getScrollObject() {
+        if (this.#scrollObject !== undefined) return this.#scrollObject;
+        this.#scrollObject = Main.panel.
+            get_children().
+            filter(c => c.name === "panelCenter")[0].
+            first_child.
+            first_child;
+        return this.#scrollObject;
+    }
+
     enableScrollBehaviour() {
+        this.getScrollObject();
         if (this.#mainPanelScrollListenerID1 != null)
-            Main.panel.disconnect(this.#mainPanelScrollListenerID1);
-        this.#mainPanelScrollListenerID1 = Main.panel.connect('scroll-event', this.scrollBehaviour.bind(this));
+            this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
+        this.#mainPanelScrollListenerID1 = this.getScrollObject().connect('scroll-event', this.scrollBehaviour.bind(this));
     }
 
     disableScrollBehaviour() {
         if (this.#mainPanelScrollListenerID1 != null)
-            Main.panel.disconnect(this.#mainPanelScrollListenerID1);
+            this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
         this.#mainPanelScrollListenerID1 = null;
     }
 

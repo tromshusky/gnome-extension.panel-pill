@@ -95,20 +95,24 @@ export default class PanelUI {
     }
 
     setReactivity(rea: boolean) {
+        const scrollObject = this.#pill.scrolling.getScrollObject();
         Main.panel.get_children().map(e => {
             e.get_children().map(f => {
                 const g = f.first_child;
-                g.reactive = rea;
+                if (scrollObject !== g)
+                    g.reactive = rea;
                 const h = g.first_child;
                 if (h != null) {
                     h.get_children().map(i => {
-                        i.reactive = rea;
+                        if (scrollObject !== i)
+                            i.reactive = rea;
                     });
                 }
             });
         });
         this.setRoundStyle();
-        Main.panel.reactive = rea;
+        if (scrollObject !== Main.panel)
+            Main.panel.reactive = rea;
         Main.panel.opacity = rea ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
     }
 
