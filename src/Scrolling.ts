@@ -113,6 +113,8 @@ export default class Scrolling {
                 this.#flickPanel.left(DURATION_FLICK, true);
             } else if (strongFlickRight) {
                 this.#flickPanel.right(DURATION_FLICK, true);
+            } else {
+                this.unblockDoubleScroll();
             }
         }
     }
