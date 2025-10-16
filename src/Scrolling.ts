@@ -1,9 +1,10 @@
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Panel } from "resource:///org/gnome/shell/ui/panel.js";
-import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
+import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN, PANEL_HEIGHT } from "./extension.js";
 import FlickPanel from "./FlickPanel.js";
 import GLib from "gi://GLib";
+import St from "gi://St";
 
 
 
@@ -21,12 +22,24 @@ export default class Scrolling {
     }
 
     getScrollObject() {
+        /*
         if (this.#scrollObject !== undefined) return this.#scrollObject;
         this.#scrollObject = Main.panel.
             get_children().
             filter(c => c.name === "panelCenter")[0].
             first_child.
             first_child;
+            */
+        if (this.#scrollObject === undefined) {
+            this.#scrollObject = new St.Widget();
+            this.#scrollObject.x = 0;
+            this.#scrollObject.y = 0;
+            this.#scrollObject.height = PANEL_HEIGHT;
+            this.#scrollObject.width = global.screen_width;
+            this.#scrollObject.reactive = true;
+        }
+        if (this.#scrollObject.get_parent() == null)
+            Main.layoutManager.panelBox.get_parent()?.add_child(this.#scrollObject); 
         return this.#scrollObject;
     }
 
