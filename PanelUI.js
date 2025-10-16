@@ -3,7 +3,6 @@ import { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX,
 export default class PanelUI {
     #timeoutFadeinID = null;
     #pill;
-    #clickStyle = "";
     constructor(pill) {
         this.#pill = pill;
     }
@@ -52,7 +51,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.translation_x = value;
     }
     makeRound() {
-        this.updateStyle();
+        this.setRoundStyle();
     }
     calcBestWidth() {
         // this code would work, if the panel didnt resize later (with accessibility and keyboard indicator)
@@ -76,24 +75,28 @@ export default class PanelUI {
         this.setReactivity(true);
         Main.panel.opacity = opacity;
     }
-    setReactivity(value) {
+    setReactivity(rea) {
+        const scrollObject = this.#pill.scrolling.getScrollObject();
         Main.panel.get_children().map(e => {
             e.get_children().map(f => {
                 const g = f.first_child;
-                g.reactive = value;
+                if (scrollObject !== g)
+                    g.reactive = rea;
                 const h = g.first_child;
                 if (h != null) {
                     h.get_children().map(i => {
-                        i.reactive = value;
+                        if (scrollObject !== i)
+                            i.reactive = rea;
                     });
                 }
             });
         });
-        this.#clickStyle = value ? "" : "pointer-events: none;";
-        this.updateStyle();
-        Main.panel.opacity = value ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
+        this.setRoundStyle();
+        if (scrollObject !== Main.panel)
+            Main.panel.reactive = rea;
+        Main.panel.opacity = rea ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
     }
-    updateStyle() {
-        Main.panel.set_style("border-radius: " + Main.panel.height + "px;" + this.#clickStyle);
+    setRoundStyle() {
+        Main.panel.set_style("border-radius: " + Main.panel.height + "px;");
     }
 }
