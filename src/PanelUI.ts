@@ -47,6 +47,28 @@ export default class PanelUI {
             onComplete: callback
         });
     }
+
+     moveUp(duration: number, callback?: () => void) {
+        Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: this.getTranslationUp(),
+            duration: duration,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: callback
+        });
+    }
+
+     moveDown(duration: number, callback?: () => void) {
+        Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: 0,
+            duration: duration,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: callback
+        });
+    }
     
     moveLeftRight(relative_x: number, duration: number, callback?: () => void) {
         Main.layoutManager.panelBox.ease({
@@ -118,24 +140,33 @@ export default class PanelUI {
         Main.layoutManager.panelBox.height = PANEL_HEIGHT;
     }
 
-    setPillXAkaLeftRight() {
+    #getPillTranslationBasedOnMouse(): number {
+        const [mouse_x] = global.get_pointer();
+        const mouseLeft = mouse_x < (global.screen_width / 3);
+        const mouseRight = mouse_x > (global.screen_width / 1.5);
+        return mouseLeft ? this.getPillTranslationLEFT() :
+            mouseRight ? this.getPillTranslationRIGHT() :
+                this.getPillTranslationX0();
+    }
+
+    setPillXAkaLeftRight(basedOnMouse?: boolean) {
         const new_width = this.#calcBestWidth();
         Main.layoutManager.panelBox.width = new_width;
-        Main.layoutManager.panelBox.translation_x = 0;
+        Main.layoutManager.panelBox.translation_x = basedOnMouse ? this.#getPillTranslationBasedOnMouse() : 0;
         const new_x = (global.screen_width - new_width) / 2;
         Main.layoutManager.panelBox.x = new_x;
     }
 
-    setPillTranslationLEFT() {
-        Main.layoutManager.panelBox.translation_x = - Main.layoutManager.panelBox.x;
+    getPillTranslationLEFT() {
+        return (- Main.layoutManager.panelBox.x);
     }
 
-    setPillTranslationRIGHT() {
-        Main.layoutManager.panelBox.translation_x = Main.layoutManager.panelBox.x;
+    getPillTranslationRIGHT() {
+        return Main.layoutManager.panelBox.x;
     }
 
-    setPillTranslationX0() {
-        Main.layoutManager.panelBox.translation_x = 0;
+    getPillTranslationX0() {
+        return 0;
     }
 
 

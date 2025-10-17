@@ -34,15 +34,14 @@ export default class MovePanel {
     down(duration: number) {
         if (this.#pill.panelUI.isVisuallyDown()) return false;
 
-        this.#pill.panelUI.setPillXAkaLeftRight();
-        this.#setPillTranslationBasedOnMouse();
+        this.#pill.panelUI.setPillXAkaLeftRight(true);
         this.#pill.panelUI.setHeightOversize(true);
 
         const onComplete = () => {
             this.#pill.panelUI.setHeightOversize(false);
         }
 
-        this.#pill.panelUI.moveUpDown(0, duration, onComplete);
+        this.#pill.panelUI.moveDown(duration, onComplete);
 
         return true;
     }
@@ -50,11 +49,10 @@ export default class MovePanel {
 
     up(duration: number, callback?: () => void) {
         if (this.#pill.panelUI.hasNegativeTranslationY()) return false;
-        const up_y = this.#pill.panelUI.getTranslationUp();
 
         this.#pill.panelUI.resetXAkaLeftRight();
 
-        this.#pill.panelUI.moveUpDown(up_y, duration, callback);
+        this.#pill.panelUI.moveUp(duration, callback);
 
         return true;
     }
@@ -99,15 +97,6 @@ export default class MovePanel {
 
        
         return true;
-    }
-
-    #setPillTranslationBasedOnMouse() {
-        const [mouse_x] = global.get_pointer();
-        const mouseLeft = mouse_x < (global.screen_width / 3);
-        const mouseRight = mouse_x > (global.screen_width / 1.5);
-        return mouseLeft ? this.#pill.panelUI.setPillTranslationLEFT :
-            mouseRight ? this.#pill.panelUI.setPillTranslationRIGHT :
-                this.#pill.panelUI.setPillTranslationX0;
     }
 
 }
