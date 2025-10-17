@@ -155,13 +155,16 @@ export default class PanelUI {
     setPillXAkaLeftRight(basedOnMouse?: boolean) {
         const new_width = this.#calcBestWidth();
         Main.layoutManager.panelBox.width = new_width;
-        Main.layoutManager.panelBox.translation_x = basedOnMouse ? this.#getPillTranslationBasedOnMouse() : 0;
+        const new_translation = basedOnMouse ? this.#getPillTranslationBasedOnMouse() : 0;
+        Main.layoutManager.panelBox.translation_x = new_translation;
         const new_x = (global.screen_width - new_width) / 2;
         Main.layoutManager.panelBox.x = new_x;
         // @ts-expect-error
         global._panelpillBasedMouse = basedOnMouse;
         // @ts-expect-error
         global._panelpillTransX = Main.layoutManager.panelBox.translation_x;
+        // @ts-expect-error
+        global._panelpillTransss = new_translation;
     }
 
     getPillTranslationLEFT() {
