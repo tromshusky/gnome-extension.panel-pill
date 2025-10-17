@@ -95,7 +95,7 @@ export default class PanelUI {
     }
 
     setReactivity(rea: boolean) {
-        const scrollObject = this.#pill.scrolling.getScrollObject();
+        const scrollObject = this.#pill.scrolling.#getScrollObject();
         Main.panel.get_children().map(e => {
             e.get_children().map(f => {
                 const g = f.first_child;

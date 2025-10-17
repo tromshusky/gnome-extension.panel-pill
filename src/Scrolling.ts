@@ -1,11 +1,10 @@
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Panel } from "resource:///org/gnome/shell/ui/panel.js";
-import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FADEIN, DURATION_FLICK, DURATION_RETURN, PANEL_HEIGHT } from "./extension.js";
+import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
 import FlickPanel from "./FlickPanel.js";
+import ScrollWidget from "./ScrollWidget.js";
 import GLib from "gi://GLib";
-import St from "gi://St";
-
 
 
 export default class Scrolling {
@@ -21,22 +20,17 @@ export default class Scrolling {
         this.#flickPanel = new FlickPanel(pill);
     }
 
-    getScrollObject() {
-        /*
-        if (this.#scrollObject !== undefined) return this.#scrollObject;
-        this.#scrollObject = Main.panel.
+    #getScrollObjectClockDate(): Clutter.Actor {
+        return Main.panel.
             get_children().
             filter(c => c.name === "panelCenter")[0].
             first_child.
             first_child;
-            */
+    }
+
+    #getScrollObject() {
         if (this.#scrollObject === undefined) {
-            this.#scrollObject = new St.Widget();
-            this.#scrollObject.x = 0;
-            this.#scrollObject.y = 0;
-            this.#scrollObject.height = PANEL_HEIGHT;
-            this.#scrollObject.width = global.screen_width;
-            this.#scrollObject.reactive = true;
+            this.#scrollObject = new ScrollWidget();
         }
         if (this.#scrollObject.get_parent() == null)
             Main.layoutManager.panelBox.get_parent()?.add_child(this.#scrollObject);
@@ -44,20 +38,20 @@ export default class Scrolling {
     }
 
     enableScrollBehaviour() {
-        this.getScrollObject();
+        this.#getScrollObject();
         if (this.#mainPanelScrollListenerID1 != null)
-            this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
-        this.#mainPanelScrollListenerID1 = this.getScrollObject().connect('scroll-event', this.debouncedScrollBehaviour.bind(this));
+            this.#getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
+        this.#mainPanelScrollListenerID1 = this.#getScrollObject().connect('scroll-event', this.debouncedScrollBehaviour.bind(this));
     }
 
     disableScrollBehaviour() {
         if (this.#mainPanelScrollListenerID1 != null)
-            this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
+            this.#getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
         this.#mainPanelScrollListenerID1 = null;
     }
 
 
-    unblockDoubleScroll() {
+    #unblockDoubleScroll() {
         if (this.#doubleScrollBlockerTimoutID != null) {
             clearTimeout(this.#doubleScrollBlockerTimoutID);
             this.#doubleScrollBlockerTimoutID = null;
@@ -68,7 +62,7 @@ export default class Scrolling {
     debouncedScrollBehaviour(_: Panel, event: Clutter.Event) {
         if (this.#doubleScrollBlockerTimoutID != null) return;
         if (this.#scrollBehaviour(event))
-            this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+            this.#doubleScrollBlockerTimoutID = setTimeout(this.#unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
     }
 
     #scrollBehaviour(event: Clutter.Event): boolean {
@@ -89,7 +83,7 @@ export default class Scrolling {
             } else if (this.#panelHideStrength == 1) {
                 this.#flickPanel.up(DURATION_FLICK, () => {
                     const dur = DURATION_ASIDE_VERYLONG;
-                    this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
+                    this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN);
                     this.#flickPanel.up(dur, () => {
                         this.#flickPanel.down(DURATION_RETURN);
                     });
@@ -102,7 +96,7 @@ export default class Scrolling {
                 this.#panelHideStrength = 1;
                 this.#panelPill.panelUI.setReactivity(false);
             } else if (this.#panelHideStrength == 1) {
-                this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+                this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK);
                 this.#panelHideStrength = 0;
             }
         } else if (direction === realScrollRight) {
