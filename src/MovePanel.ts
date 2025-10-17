@@ -1,6 +1,4 @@
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import PanelPillExtension, { PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
-import Clutter from "gi://Clutter";
+import PanelPillExtension from "./extension.js";
 
 
 
@@ -34,42 +32,30 @@ export default class MovePanel {
     }
 
     down(duration: number) {
-        if (Main.layoutManager.panelBox.translation_y == 0) return false;
+        if (this.#pill.panelUI.isVisuallyDown()) return false;
 
         this.#pill.panelUI.setPillXAkaLeftRight();
         this.#setPillTranslationBasedOnMouse();
         this.#pill.panelUI.setHeightOversize(true);
 
-        Main.layoutManager.panelBox.ease({
-            // somehow the library in use doesnt support translation_x and translation_y
-            // @ts-expect-error 
-            // translation_x: 0,
-            translation_y: 0,
-            duration: duration,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: () => {
-                this.#pill.panelUI.setHeightOversize(false);
-            }
-        });
+        const onComplete = () => {
+            this.#pill.panelUI.setHeightOversize(false);
+        }
+
+        this.#pill.panelUI.moveUpDown(0, duration, onComplete);
 
         return true;
     }
 
 
-    up(duration: number, callb?: () => void) {
+    up(duration: number, callback?: () => void) {
         if (this.#pill.panelUI.hasNegativeTranslationY()) return false;
-        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
+        const up_y = this.#pill.panelUI.getTranslationUp();
 
         this.#pill.panelUI.resetXAkaLeftRight();
 
-        Main.layoutManager.panelBox.ease({
-            // somehow the library in use doesnt support translation_x and translation_y
-            // @ts-expect-error 
-            translation_y: up_y,
-            duration: duration,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: callb
-        });
+        this.#pill.panelUI.moveUpDown(up_y, duration, callback);
+
         return true;
     }
 
@@ -81,8 +67,7 @@ export default class MovePanel {
             this.#pill.panelUI.getRightEnd() :
             this.#pill.panelUI.getLeftEnd();
 
-        const panelIsAlreadyVeryHere = Main.layoutManager.panelBox.translation_x === theVeryEnd;
-
+        const panelIsAlreadyVeryHere = toTheRight ? this.#pill.panelUI.isVisuallyAtTheRightEnd() : this.#pill.panelUI.isVisuallyAtTheLeftEnd();
         if (panelIsAlreadyVeryHere) return false;
 
         // making a check so a half flick does not destroy a strong flick
@@ -106,18 +91,13 @@ export default class MovePanel {
                 (toTheRight ? ANIMATION.RIGHTRIGHT : ANIMATION.LEFTLEFT);
 
         this.#ongoingAnimation = thisAnimation;
+        const onComplete = () => {
+            if (this.#ongoingAnimation === thisAnimation)
+                this.#ongoingAnimation = ANIMATION.NONE;
+        };
+        this.#pill.panelUI.moveLeftRight(relative_x, duration, onComplete)
 
-        Main.layoutManager.panelBox.ease({
-            // somehow the library in use doesnt support translation_x and translation_y
-            // @ts-expect-error 
-            translation_x: relative_x,
-            duration: duration,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: () => {
-                if (this.#ongoingAnimation === thisAnimation)
-                    this.#ongoingAnimation = ANIMATION.NONE;
-            }
-        });
+       
         return true;
     }
 

@@ -1,6 +1,7 @@
 import GLib from 'gi://GLib';
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX, PANEL_XY_RATIO, PANEL_Y } from "./extension.js";
+import PanelPillExtension, { PANEL_HEIGHT, PANEL_OPACITY_HIGH, PANEL_OPACITY_LOW, PANEL_OPACITY_MAX, PANEL_XY_RATIO, PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
+import Clutter from "gi://Clutter";
 
 
 export default class PanelUI {
@@ -36,14 +37,50 @@ export default class PanelUI {
         Main.layoutManager.panelBox.width = global.screen_width;
     }
 
+    moveUpDown(translationY: number, duration: number, callback?: () => void) {
+        Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: translationY,
+            duration: duration,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: callback
+        });
+    }
+    
+    moveLeftRight(relative_x: number, duration: number, callback?: () => void) {
+        Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_x: relative_x,
+            duration: duration,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: callback
+        });
+    }
+
     setHeightOversize(enable: boolean) {
         Main.layoutManager.panelBox.height = PANEL_HEIGHT + (enable ? 1 : 0);
     }
+
     getRightEnd() {
         return (Main.layoutManager.panelBox.x - PANEL_Y);
     }
+
+    isVisuallyAtTheRightEnd() {
+        return Main.layoutManager.panelBox.translation_x === this.getRightEnd();
+    }
+
+    isVisuallyAtTheLeftEnd() {
+        return Main.layoutManager.panelBox.translation_x === this.getLeftEnd();
+    }
+
     getLeftEnd() {
         return (PANEL_Y - Main.layoutManager.panelBox.x);
+    }
+
+    getTranslationUp() {
+        return STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
     }
 
     hasNegativeTranslationY() {
@@ -53,8 +90,13 @@ export default class PanelUI {
     isVisuallyRightOrMid() {
         return (Main.layoutManager.panelBox.translation_x >= 0);
     }
+
     isVisuallyLeftOrMid() {
         return (Main.layoutManager.panelBox.translation_x <= 0);
+    }
+
+    isVisuallyDown() {
+        return (Main.layoutManager.panelBox.translation_y == 0);
     }
 
     #resetOpacity() {
