@@ -48,7 +48,7 @@ export default class PanelUI {
         });
     }
 
-     moveUp(duration: number, callback?: () => void) {
+    moveUp(duration: number, callback?: () => void) {
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
@@ -59,18 +59,17 @@ export default class PanelUI {
         });
     }
 
-     moveDown(duration: number, callback?: () => void) {
+    moveDown(duration: number, callback?: () => void) {
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
-            translation_X: -200, //TODO
             translation_y: 0,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: callback
         });
     }
-    
+
     moveLeftRight(relative_x: number, duration: number, callback?: () => void) {
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
@@ -156,6 +155,8 @@ export default class PanelUI {
         Main.layoutManager.panelBox.translation_x = basedOnMouse ? this.#getPillTranslationBasedOnMouse() : 0;
         const new_x = (global.screen_width - new_width) / 2;
         Main.layoutManager.panelBox.x = new_x;
+        // @ts-expect-error 
+        global._panelpillTransX = Main.layoutManager.panelBox.translation_x;
     }
 
     getPillTranslationLEFT() {
