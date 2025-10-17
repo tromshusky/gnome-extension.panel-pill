@@ -168,14 +168,20 @@ export default class PanelUI {
     }
 
     getPillTranslationLEFT() {
+        // @ts-expect-error
+        global._panelpillTrString = "left";
         return (- Main.layoutManager.panelBox.x);
     }
 
     getPillTranslationRIGHT() {
+        // @ts-expect-error
+        global._panelpillTrString = "right";
         return Main.layoutManager.panelBox.x;
     }
 
     getPillTranslationX0() {
+        // @ts-expect-error
+        global._panelpillTrString = "zero";
         return 0;
     }
 
