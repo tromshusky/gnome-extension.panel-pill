@@ -3,7 +3,7 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { Panel } from "resource:///org/gnome/shell/ui/panel.js";
 import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
 import FlickPanel from "./FlickPanel.js";
-import ScrollWidget from "./ScrollWidget.js";
+import { newScrollWidget } from "./scrollWidget.js";
 import GLib from "gi://GLib";
 
 
@@ -35,7 +35,7 @@ export default class Scrolling {
 
     getScrollObject() {
         if (this.#scrollObject === undefined) {
-            this.#scrollObject = new ScrollWidget();
+            this.#scrollObject = newScrollWidget();
         }
         if (this.#scrollObject.get_parent() == null)
             Main.layoutManager.panelBox.get_parent()?.add_child(this.#scrollObject);
