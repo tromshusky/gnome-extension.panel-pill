@@ -62,9 +62,18 @@ export default class PanelUI {
         Main.layoutManager.panelBox.x = new_x;
     }
 
-    setPillTranslationXAkaLeftRight(value: number) {
-        Main.layoutManager.panelBox.translation_x = value;
+    setPillTranslationLEFT(){
+        Main.layoutManager.panelBox.translation_x = - Main.layoutManager.panelBox.x;
     }
+
+    setPillTranslationRIGHT(){
+        Main.layoutManager.panelBox.translation_x = Main.layoutManager.panelBox.x;
+    }
+
+    setPillTranslationX0(){
+        Main.layoutManager.panelBox.translation_x = 0;
+    }
+
 
     makeRound() {
         this.#setRoundStyle();

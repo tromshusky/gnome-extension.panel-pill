@@ -33,20 +33,18 @@ export default class FlickPanel {
     leftStrong(duration: number) {
         return this.#sideways(ANIMATION.LEFT, duration, true);
     }
-    
+
     down(duration: number) {
         if (Main.layoutManager.panelBox.translation_y == 0) return false;
 
-        const new_translation_x = this.#calculateTranslationXBasedOnMouse();
-
         this.#pill.panelUI.setPillXAkaLeftRight();
-        this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
+        this.#setPillTranslationBasedOnMouse();
         Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
 
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
-            translation_x: new_translation_x,
+            // translation_x: 0,
             translation_y: 0,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
@@ -124,12 +122,13 @@ export default class FlickPanel {
         return true;
     }
 
-    #calculateTranslationXBasedOnMouse() {
+    #setPillTranslationBasedOnMouse() {
         const [mouse_x] = global.get_pointer();
-        const mouseRight = mouse_x < (global.screen_width / 3);
-        const mouseLeft = mouse_x > (global.screen_width / 1.5);
-        return mouseLeft ? (- Main.layoutManager.panelBox.x) :
-            mouseRight ? Main.layoutManager.panelBox.x : 0;
+        const mouseLeft = mouse_x < (global.screen_width / 3);
+        const mouseRight = mouse_x > (global.screen_width / 1.5);
+        return mouseLeft ? this.#pill.panelUI.setPillTranslationLEFT :
+            mouseRight ? this.#pill.panelUI.setPillTranslationRIGHT :
+                this.#pill.panelUI.setPillTranslationX0;
     }
 
 }
