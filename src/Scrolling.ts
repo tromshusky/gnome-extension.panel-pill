@@ -1,15 +1,14 @@
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { Panel } from "resource:///org/gnome/shell/ui/panel.js";
 import PanelPillExtension, { DOUBLE_SCROLL_DELAY, DURATION_ASIDE_VERYLONG, DURATION_FLICK, DURATION_RETURN } from "./extension.js";
-import FlickPanel from "./FlickPanel.js";
+import MovePanel from "./MovePanel.js";
 import { newScrollWidget } from "./scrollWidget.js";
 import GLib from "gi://GLib";
 
 
 export default class Scrolling {
     #doubleScrollBlockerTimoutID: GLib.Source | null = null;
-    #flickPanel: FlickPanel;
+    #flickPanel: MovePanel;
     #mainPanelScrollListenerID1: number | null = null;
     #panelHideStrength: number = 0;
     #panelPill: PanelPillExtension;
@@ -17,7 +16,7 @@ export default class Scrolling {
 
     constructor(pill: PanelPillExtension) {
         this.#panelPill = pill;
-        this.#flickPanel = new FlickPanel(pill);
+        this.#flickPanel = new MovePanel(pill);
     }
 
     enableScrollBehaviour() {
@@ -59,7 +58,7 @@ export default class Scrolling {
     }
 
 
-    #debouncedScrollBehaviour(_: Panel, event: Clutter.Event) {
+    #debouncedScrollBehaviour(_: any, event: Clutter.Event) {
         if (this.#doubleScrollBlockerTimoutID != null) return;
         if (this.#scrollBehaviour(event))
             this.#doubleScrollBlockerTimoutID = setTimeout(this.#unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);

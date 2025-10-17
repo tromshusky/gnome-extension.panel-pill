@@ -1,7 +1,6 @@
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import PanelPillExtension, { PANEL_HEIGHT, PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
+import PanelPillExtension, { PANEL_Y, STILL_ON_SCREEN_PIXEL } from "./extension.js";
 import Clutter from "gi://Clutter";
-import { layoutManager } from "@girs/gnome-shell/ui/main";
 
 
 
@@ -9,7 +8,7 @@ enum ANIMATION {
     NONE, LEFT, RIGHT, LEFTLEFT, RIGHTRIGHT, UP, DOWN
 }
 
-export default class FlickPanel {
+export default class MovePanel {
 
     #ongoingAnimation = ANIMATION.NONE;
     #pill: PanelPillExtension;
@@ -39,7 +38,7 @@ export default class FlickPanel {
 
         this.#pill.panelUI.setPillXAkaLeftRight();
         this.#setPillTranslationBasedOnMouse();
-        Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
+        this.#pill.panelUI.setHeightOversize(true);
 
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
@@ -49,7 +48,7 @@ export default class FlickPanel {
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: () => {
-                Main.layoutManager.panelBox.height = PANEL_HEIGHT;
+                this.#pill.panelUI.setHeightOversize(false);
             }
         });
 
@@ -58,7 +57,7 @@ export default class FlickPanel {
 
 
     up(duration: number, callb?: () => void) {
-        if (Main.layoutManager.panelBox.translation_y < 0) return false;
+        if (this.#pill.panelUI.hasNegativeTranslationY()) return false;
         const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
 
         this.#pill.panelUI.resetXAkaLeftRight();
@@ -77,10 +76,10 @@ export default class FlickPanel {
 
     #sideways(direction1: ANIMATION.RIGHT | ANIMATION.LEFT, duration: number, strong?: boolean) {
         // with Here is meant the target side / direction side
-        const isRight = direction1 === ANIMATION.RIGHT;
-        const theVeryEnd = isRight ?
-            (Main.layoutManager.panelBox.x - PANEL_Y) :
-            (PANEL_Y - Main.layoutManager.panelBox.x);
+        const toTheRight = direction1 === ANIMATION.RIGHT;
+        const theVeryEnd = toTheRight ?
+            this.#pill.panelUI.getRightEnd() :
+            this.#pill.panelUI.getLeftEnd();
 
         const panelIsAlreadyVeryHere = Main.layoutManager.panelBox.translation_x === theVeryEnd;
 
@@ -94,9 +93,9 @@ export default class FlickPanel {
 
         if (invalidAnimationOverride) return false;
 
-        const panelIsHereOrMid = isRight ?
-            (Main.layoutManager.panelBox.translation_x >= 0) :
-            (Main.layoutManager.panelBox.translation_x <= 0);
+        const panelIsHereOrMid = toTheRight ?
+            this.#pill.panelUI.isVisuallyRightOrMid() :
+            this.#pill.panelUI.isVisuallyLeftOrMid();
 
         const relative_x = (strong || panelIsHereOrMid) ?
             theVeryEnd :
@@ -104,7 +103,7 @@ export default class FlickPanel {
 
         const thisAnimation =
             (relative_x === 0) ? direction1 :
-                (isRight ? ANIMATION.RIGHTRIGHT : ANIMATION.LEFTLEFT);
+                (toTheRight ? ANIMATION.RIGHTRIGHT : ANIMATION.LEFTLEFT);
 
         this.#ongoingAnimation = thisAnimation;
 

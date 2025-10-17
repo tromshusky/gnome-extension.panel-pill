@@ -7,6 +7,7 @@ export default class PanelUI {
     #timeoutFadeinID: GLib.Source | null = null;
     #pill: PanelPillExtension;
 
+
     constructor(pill: PanelPillExtension) {
         this.#pill = pill;
     }
@@ -24,14 +25,6 @@ export default class PanelUI {
         this.#resetStyle();
     }
 
-    #resetOpacity() {
-        this.#resetReactivityToTrue(PANEL_OPACITY_MAX);
-    }
-
-    #resetStyle() {
-        Main.panel.set_style("");
-    }
-
     resetYAkaUpDown() {
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.height = Main.panel.height;
@@ -41,6 +34,35 @@ export default class PanelUI {
         Main.layoutManager.panelBox.translation_x = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
+    }
+
+    setHeightOversize(enable: boolean) {
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT + (enable ? 1 : 0);
+    }
+    getRightEnd() {
+        return (Main.layoutManager.panelBox.x - PANEL_Y);
+    }
+    getLeftEnd() {
+        return (PANEL_Y - Main.layoutManager.panelBox.x);
+    }
+
+    hasNegativeTranslationY() {
+        return Main.layoutManager.panelBox.translation_y < 0;
+    }
+
+    isVisuallyRightOrMid() {
+        return (Main.layoutManager.panelBox.translation_x >= 0);
+    }
+    isVisuallyLeftOrMid() {
+        return (Main.layoutManager.panelBox.translation_x <= 0);
+    }
+
+    #resetOpacity() {
+        this.#resetReactivityToTrue(PANEL_OPACITY_MAX);
+    }
+
+    #resetStyle() {
+        Main.panel.set_style("");
     }
 
     #setPillOpacity() {
@@ -62,15 +84,15 @@ export default class PanelUI {
         Main.layoutManager.panelBox.x = new_x;
     }
 
-    setPillTranslationLEFT(){
+    setPillTranslationLEFT() {
         Main.layoutManager.panelBox.translation_x = - Main.layoutManager.panelBox.x;
     }
 
-    setPillTranslationRIGHT(){
+    setPillTranslationRIGHT() {
         Main.layoutManager.panelBox.translation_x = Main.layoutManager.panelBox.x;
     }
 
-    setPillTranslationX0(){
+    setPillTranslationX0() {
         Main.layoutManager.panelBox.translation_x = 0;
     }
 
