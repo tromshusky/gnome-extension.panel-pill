@@ -20,16 +20,21 @@ export const DOUBLE_SCROLL_DELAY = 300;
 
 export default class PanelPillExtension extends Extension {
 
-    scrolling;
-    overviewFix;
-    panelUI;
+    scrolling: Scrolling;
+    overviewFix: OverviewFix;
+    panelUI: PanelUI;
 
-    constructor(args: ExtensionMetadata) {
-        super(args);
-        this.panelUI = new PanelUI(this);
+    constructor(em: ExtensionMetadata) {
+        /*         
+            the constructors are not supposed to do anything
+            else but linking the class objects to each other
+        */
+        super(em);
         this.scrolling = new Scrolling(this);
         this.overviewFix = new OverviewFix(this);
+        this.panelUI = new PanelUI(this);
     }
+
 
     enable() {
         this.scrolling.enableScrollBehaviour();

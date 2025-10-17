@@ -20,23 +20,6 @@ export default class Scrolling {
         this.#flickPanel = new FlickPanel(pill);
     }
 
-    #getScrollObjectClockDate(): Clutter.Actor {
-        return Main.panel.
-            get_children().
-            filter(c => c.name === "panelCenter")[0].
-            first_child.
-            first_child;
-    }
-
-    getScrollObject() {
-        if (this.#scrollObject === undefined) {
-            this.#scrollObject = new ScrollWidget();
-        }
-        if (this.#scrollObject.get_parent() == null)
-            Main.layoutManager.panelBox.get_parent()?.add_child(this.#scrollObject);
-        return this.#scrollObject;
-    }
-
     enableScrollBehaviour() {
         this.getScrollObject();
         if (this.#mainPanelScrollListenerID1 != null)
@@ -50,6 +33,23 @@ export default class Scrolling {
         this.#mainPanelScrollListenerID1 = null;
     }
 
+    getScrollObject() {
+        if (this.#scrollObject === undefined) {
+            this.#scrollObject = new ScrollWidget();
+        }
+        if (this.#scrollObject.get_parent() == null)
+            Main.layoutManager.panelBox.get_parent()?.add_child(this.#scrollObject);
+        return this.#scrollObject;
+    }
+
+
+    #getScrollObjectClockDate(): Clutter.Actor {
+        return Main.panel.
+            get_children().
+            filter(c => c.name === "panelCenter")[0].
+            first_child.
+            first_child;
+    }
 
     #unblockDoubleScroll() {
         if (this.#doubleScrollBlockerTimoutID != null) {
@@ -63,6 +63,35 @@ export default class Scrolling {
         if (this.#doubleScrollBlockerTimoutID != null) return;
         if (this.#scrollBehaviour(event))
             this.#doubleScrollBlockerTimoutID = setTimeout(this.#unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+    }
+
+    #scrollBehaviour(event: Clutter.Event): boolean {
+
+        const direction = event.get_scroll_direction();
+        const strongFlickLeft = event.get_scroll_delta()[0] > 2;
+        const strongFlickRight = event.get_scroll_delta()[0] < (-2);
+
+        const realScrollDown = Clutter.ScrollDirection.UP;
+        const realScrollUp = Clutter.ScrollDirection.DOWN;
+        const realScrollRight = Clutter.ScrollDirection.LEFT;
+        const realScrollLeft = Clutter.ScrollDirection.RIGHT;
+
+        if (direction === realScrollUp) {
+            this.#flickPanelUp();
+        } else if (direction === realScrollDown) {
+            this.#flickPanelDown();
+        } else if (direction === realScrollRight) {
+            this.#flickPanel.right(DURATION_FLICK);
+        } else if (direction === realScrollLeft) {
+            this.#flickPanel.left(DURATION_FLICK);
+        } else if (strongFlickLeft) {
+            this.#flickPanel.leftStrong(DURATION_FLICK);
+        } else if (strongFlickRight) {
+            this.#flickPanel.rightStrong(DURATION_FLICK);
+        } else {
+            return false;
+        }
+        return true;
     }
 
     #flickPanelUp() {
@@ -90,35 +119,6 @@ export default class Scrolling {
             this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK);
         }
         this.#panelHideStrength--;
-    }
-
-    #scrollBehaviour(event: Clutter.Event): boolean {
-
-        const direction = event.get_scroll_direction();
-        const strongFlickLeft = event.get_scroll_delta()[0] > 2;
-        const strongFlickRight = event.get_scroll_delta()[0] < (-2);
-
-        const realScrollDown = Clutter.ScrollDirection.UP;
-        const realScrollUp = Clutter.ScrollDirection.DOWN;
-        const realScrollRight = Clutter.ScrollDirection.LEFT;
-        const realScrollLeft = Clutter.ScrollDirection.RIGHT;
-
-        if (direction === realScrollUp) {
-            this.#flickPanelUp();
-        } else if (direction === realScrollDown) {
-            this.#flickPanelDown();
-        } else if (direction === realScrollRight) {
-            this.#flickPanel.right(DURATION_FLICK);
-        } else if (direction === realScrollLeft) {
-            this.#flickPanel.left(DURATION_FLICK);
-        } else if (strongFlickLeft) {
-            this.#flickPanel.left(DURATION_FLICK, true);
-        } else if (strongFlickRight) {
-            this.#flickPanel.right(DURATION_FLICK, true);
-        } else {
-            return false;
-        }
-        return true;
     }
 
 }

@@ -18,7 +18,66 @@ export default class FlickPanel {
         this.#pill = pill;
     }
 
-    sideways(direction1: ANIMATION.RIGHT | ANIMATION.LEFT, duration: number, strong?: boolean) {
+    right(duration: number) {
+        return this.#sideways(ANIMATION.RIGHT, duration, false);
+    }
+
+    left(duration: number) {
+        return this.#sideways(ANIMATION.LEFT, duration, false);
+    }
+
+    rightStrong(duration: number) {
+        return this.#sideways(ANIMATION.RIGHT, duration, true);
+    }
+
+    leftStrong(duration: number) {
+        return this.#sideways(ANIMATION.LEFT, duration, true);
+    }
+    
+    down(duration: number) {
+        if (Main.layoutManager.panelBox.translation_y == 0) return false;
+
+        const new_translation_x = this.#calculateTranslationXBasedOnMouse();
+
+        this.#pill.panelUI.setPillXAkaLeftRight();
+        this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
+        Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
+
+        Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_x: new_translation_x,
+            translation_y: 0,
+            duration: duration,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: () => {
+                Main.layoutManager.panelBox.height = PANEL_HEIGHT;
+            }
+        });
+
+        return true;
+    }
+
+
+    up(duration: number, callb?: () => void) {
+        if (Main.layoutManager.panelBox.translation_y < 0) return false;
+        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
+
+        this.#pill.panelUI.resetXAkaLeftRight();
+
+        Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: up_y,
+            duration: duration,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: callb
+        });
+        return true;
+    }
+
+
+    #sideways(direction1: ANIMATION.RIGHT | ANIMATION.LEFT, duration: number, strong?: boolean) {
         // with Here is meant the target side / direction side
         const isRight = direction1 === ANIMATION.RIGHT;
         const theVeryEnd = isRight ?
@@ -65,63 +124,12 @@ export default class FlickPanel {
         return true;
     }
 
-    right(duration: number, strong?: boolean) {
-        return this.sideways(ANIMATION.RIGHT, duration, strong);
-    }
-
-    left(duration: number, strong?: boolean) {
-        return this.sideways(ANIMATION.LEFT, duration, strong);
-    }
-
     #calculateTranslationXBasedOnMouse() {
         const [mouse_x] = global.get_pointer();
         const mouseRight = mouse_x < (global.screen_width / 3);
         const mouseLeft = mouse_x > (global.screen_width / 1.5);
         return mouseLeft ? (- Main.layoutManager.panelBox.x) :
             mouseRight ? Main.layoutManager.panelBox.x : 0;
-    }
-
-
-    down(duration: number) {
-        if (Main.layoutManager.panelBox.translation_y == 0) return false;
-
-        const new_translation_x = this.#calculateTranslationXBasedOnMouse();
-
-        this.#pill.panelUI.setPillXAkaLeftRight();
-        this.#pill.panelUI.setPillTranslationXAkaLeftRight(new_translation_x);
-        Main.layoutManager.panelBox.height = PANEL_HEIGHT + 1;
-
-        Main.layoutManager.panelBox.ease({
-            // somehow the library in use doesnt support translation_x and translation_y
-            // @ts-expect-error 
-            translation_x: new_translation_x,
-            translation_y: 0,
-            duration: duration,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: () => {
-                Main.layoutManager.panelBox.height = PANEL_HEIGHT;
-            }
-        });
-
-        return true;
-    }
-
-
-    up(duration: number, callb?: () => void) {
-        if (Main.layoutManager.panelBox.translation_y < 0) return false;
-        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
-
-        this.#pill.panelUI.resetXAkaLeftRight();
-
-        Main.layoutManager.panelBox.ease({
-            // somehow the library in use doesnt support translation_x and translation_y
-            // @ts-expect-error 
-            translation_y: up_y,
-            duration: duration,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: callb
-        });
-        return true;
     }
 
 }
