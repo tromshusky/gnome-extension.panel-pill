@@ -155,7 +155,9 @@ export default class PanelUI {
         Main.layoutManager.panelBox.translation_x = basedOnMouse ? this.#getPillTranslationBasedOnMouse() : 0;
         const new_x = (global.screen_width - new_width) / 2;
         Main.layoutManager.panelBox.x = new_x;
-        // @ts-expect-error 
+        // @ts-expect-error
+        global._panelpillBasedMouse = basedOnMouse;
+        // @ts-expect-error
         global._panelpillTransX = Main.layoutManager.panelBox.translation_x;
     }
 
