@@ -156,7 +156,9 @@ export default class PanelUI {
         const new_width = this.#calcBestWidth();
         Main.layoutManager.panelBox.width = new_width;
         const new_x = (global.screen_width - new_width) / 2;
+        // we have to set x before we calculate translation_x
         Main.layoutManager.panelBox.x = new_x;
+        // now we can calculate translation_x
         const new_translation = basedOnMouse ? this.#getPillTranslationBasedOnMouse() : 0;
         Main.layoutManager.panelBox.translation_x = new_translation;
         // @ts-expect-error
