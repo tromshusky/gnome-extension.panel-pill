@@ -47,7 +47,7 @@ export default class Scrolling {
         this.getScrollObject();
         if (this.#mainPanelScrollListenerID1 != null)
             this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
-        this.#mainPanelScrollListenerID1 = this.getScrollObject().connect('scroll-event', this.scrollBehaviour.bind(this));
+        this.#mainPanelScrollListenerID1 = this.getScrollObject().connect('scroll-event', this.debouncedScrollBehaviour.bind(this));
     }
 
     disableScrollBehaviour() {
@@ -64,10 +64,14 @@ export default class Scrolling {
         }
     }
 
-    scrollBehaviour(_: Panel, event: Clutter.Event) {
 
+    debouncedScrollBehaviour(_: Panel, event: Clutter.Event) {
         if (this.#doubleScrollBlockerTimoutID != null) return;
+        if (this.#scrollBehaviour(event))
+            this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+    }
 
+    #scrollBehaviour(event: Clutter.Event): boolean {
 
         const direction = event.get_scroll_direction();
         const strongFlickLeft = event.get_scroll_delta()[0] > 2;
@@ -110,11 +114,9 @@ export default class Scrolling {
         } else if (strongFlickRight) {
             this.#flickPanel.right(DURATION_FLICK, true);
         } else {
-            return;
+            return false;
         }
-
-        this.#doubleScrollBlockerTimoutID = setTimeout(this.unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
-
+        return true;
     }
 
 }
