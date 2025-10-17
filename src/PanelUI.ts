@@ -63,6 +63,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
+            translation_X: -200, //TODO
             translation_y: 0,
             duration: duration,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
