@@ -28,7 +28,7 @@ export default class Scrolling {
             first_child;
     }
 
-    #getScrollObject() {
+    getScrollObject() {
         if (this.#scrollObject === undefined) {
             this.#scrollObject = new ScrollWidget();
         }
@@ -38,15 +38,15 @@ export default class Scrolling {
     }
 
     enableScrollBehaviour() {
-        this.#getScrollObject();
+        this.getScrollObject();
         if (this.#mainPanelScrollListenerID1 != null)
-            this.#getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
-        this.#mainPanelScrollListenerID1 = this.#getScrollObject().connect('scroll-event', this.debouncedScrollBehaviour.bind(this));
+            this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
+        this.#mainPanelScrollListenerID1 = this.getScrollObject().connect('scroll-event', this.#debouncedScrollBehaviour.bind(this));
     }
 
     disableScrollBehaviour() {
         if (this.#mainPanelScrollListenerID1 != null)
-            this.#getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
+            this.getScrollObject().disconnect(this.#mainPanelScrollListenerID1);
         this.#mainPanelScrollListenerID1 = null;
     }
 
@@ -59,10 +59,37 @@ export default class Scrolling {
     }
 
 
-    debouncedScrollBehaviour(_: Panel, event: Clutter.Event) {
+    #debouncedScrollBehaviour(_: Panel, event: Clutter.Event) {
         if (this.#doubleScrollBlockerTimoutID != null) return;
         if (this.#scrollBehaviour(event))
             this.#doubleScrollBlockerTimoutID = setTimeout(this.#unblockDoubleScroll.bind(this), DOUBLE_SCROLL_DELAY);
+    }
+
+    #flickPanelUp() {
+        if (this.#panelHideStrength >= 2) return;
+        if (this.#panelHideStrength == 0) {
+            this.#panelPill.panelUI.setReactivity(false);
+        } else if (this.#panelHideStrength == 1) {
+            this.#flickPanel.up(DURATION_FLICK, () => {
+                const dur = DURATION_ASIDE_VERYLONG;
+                this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN);
+                this.#flickPanel.up(dur, () => {
+                    this.#flickPanel.down(DURATION_RETURN);
+                });
+            });
+        }
+        this.#panelHideStrength++;
+    }
+
+    #flickPanelDown() {
+        if (this.#panelHideStrength <= 0) return;
+        if (this.#panelHideStrength == 2) {
+            this.#flickPanel.down(DURATION_FLICK);
+            this.#panelPill.panelUI.setReactivity(false);
+        } else if (this.#panelHideStrength == 1) {
+            this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK);
+        }
+        this.#panelHideStrength--;
     }
 
     #scrollBehaviour(event: Clutter.Event): boolean {
@@ -77,28 +104,9 @@ export default class Scrolling {
         const realScrollLeft = Clutter.ScrollDirection.RIGHT;
 
         if (direction === realScrollUp) {
-            if (this.#panelHideStrength == 0) {
-                this.#panelPill.panelUI.setReactivity(false);
-                this.#panelHideStrength = 1;
-            } else if (this.#panelHideStrength == 1) {
-                this.#flickPanel.up(DURATION_FLICK, () => {
-                    const dur = DURATION_ASIDE_VERYLONG;
-                    this.#panelPill.panelUI.temporarySetReactivityFalse(dur + DURATION_RETURN);
-                    this.#flickPanel.up(dur, () => {
-                        this.#flickPanel.down(DURATION_RETURN);
-                    });
-                });
-                this.#panelHideStrength = 2;
-            }
+            this.#flickPanelUp();
         } else if (direction === realScrollDown) {
-            if (this.#panelHideStrength == 2) {
-                this.#flickPanel.down(DURATION_FLICK);
-                this.#panelHideStrength = 1;
-                this.#panelPill.panelUI.setReactivity(false);
-            } else if (this.#panelHideStrength == 1) {
-                this.#panelPill.panelUI.temporarySetReactivityFalse(DURATION_FLICK);
-                this.#panelHideStrength = 0;
-            }
+            this.#flickPanelDown();
         } else if (direction === realScrollRight) {
             this.#flickPanel.right(DURATION_FLICK);
         } else if (direction === realScrollLeft) {

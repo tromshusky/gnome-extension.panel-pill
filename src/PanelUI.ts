@@ -14,20 +14,21 @@ export default class PanelUI {
     enable() {
         this.setPillXAkaLeftRight();
         this.setPillYAkaUpDown();
-        this.setPillOpacity();
+        this.#setPillOpacity();
     }
 
     disable() {
         this.resetXAkaLeftRight();
         this.resetYAkaUpDown();
-        this.resetOpacity();
+        this.#resetOpacity();
+        this.#resetStyle();
     }
 
-    resetOpacity() {
-        this.resetReactivityToTrue(PANEL_OPACITY_MAX);
+    #resetOpacity() {
+        this.#resetReactivityToTrue(PANEL_OPACITY_MAX);
     }
 
-    resetStyle() {
+    #resetStyle() {
         Main.panel.set_style("");
     }
 
@@ -42,7 +43,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.width = global.screen_width;
     }
 
-    setPillOpacity() {
+    #setPillOpacity() {
         Main.panel.opacity = PANEL_OPACITY_HIGH;
     }
 
@@ -54,7 +55,7 @@ export default class PanelUI {
     }
 
     setPillXAkaLeftRight() {
-        const new_width = this.calcBestWidth();
+        const new_width = this.#calcBestWidth();
         Main.layoutManager.panelBox.width = new_width;
         Main.layoutManager.panelBox.translation_x = 0;
         const new_x = (global.screen_width - new_width) / 2;
@@ -66,10 +67,10 @@ export default class PanelUI {
     }
 
     makeRound() {
-        this.setRoundStyle();
+        this.#setRoundStyle();
     }
 
-    calcBestWidth() {
+    #calcBestWidth() {
         // this code would work, if the panel didnt resize later (with accessibility and keyboard indicator)
         //        const elem_width = Main.panel.get_children().map(child => child.width).reduce((a, b) => a + b);
         //        const min_width = elem_width + (Main.panel.height * 8);
@@ -82,11 +83,11 @@ export default class PanelUI {
     temporarySetReactivityFalse(duration: number) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
-        this.#timeoutFadeinID = setTimeout(this.resetReactivityToTrue.bind(this), duration);
+        this.#timeoutFadeinID = setTimeout(this.#resetReactivityToTrue.bind(this), duration);
         this.setReactivity(false);
     }
 
-    resetReactivityToTrue(opacity: number = PANEL_OPACITY_HIGH) {
+    #resetReactivityToTrue(opacity: number = PANEL_OPACITY_HIGH) {
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
         this.#timeoutFadeinID = null;
@@ -95,7 +96,7 @@ export default class PanelUI {
     }
 
     setReactivity(rea: boolean) {
-        const scrollObject = this.#pill.scrolling.#getScrollObject();
+        const scrollObject = this.#pill.scrolling.getScrollObject();
         Main.panel.get_children().map(e => {
             e.get_children().map(f => {
                 const g = f.first_child;
@@ -110,13 +111,13 @@ export default class PanelUI {
                 }
             });
         });
-        this.setRoundStyle();
+        this.#setRoundStyle();
         if (scrollObject !== Main.panel)
             Main.panel.reactive = rea;
         Main.panel.opacity = rea ? PANEL_OPACITY_HIGH : PANEL_OPACITY_LOW;
     }
 
-    setRoundStyle() {
+    #setRoundStyle() {
         Main.panel.set_style("border-radius: " + Main.panel.height + "px;");
     }
 }
