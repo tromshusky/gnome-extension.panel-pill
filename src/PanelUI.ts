@@ -141,9 +141,12 @@ export default class PanelUI {
     }
 
     #getPillTranslationBasedOnMouse(): number {
-        const [mouse_x] = global.get_pointer();
+        const getP = global.get_pointer();
+        const [mouse_x] = getP;
         const mouseLeft = mouse_x < (global.screen_width / 3);
         const mouseRight = mouse_x > (global.screen_width / 1.5);
+        // @ts-expect-error
+        global._panelpillPointer = getP;
         return mouseLeft ? this.getPillTranslationLEFT() :
             mouseRight ? this.getPillTranslationRIGHT() :
                 this.getPillTranslationX0();
