@@ -4,7 +4,6 @@ import OverviewFix from './OverviewFix.js';
 import PanelUI from './PanelUI.js';
 export const DURATION_ASIDE = 7000;
 export const DURATION_ASIDE_VERYLONG = 1000000;
-export const DURATION_FADEIN = 10; // actually useless with double up scroll
 export const DURATION_FLICK = 200;
 export const DURATION_RETURN = 2000;
 // PANEL_HEIGHT will also be the gap above fullscreen windows
@@ -21,11 +20,15 @@ export default class PanelPillExtension extends Extension {
     scrolling;
     overviewFix;
     panelUI;
-    constructor(args) {
-        super(args);
-        this.panelUI = new PanelUI(this);
+    constructor(em) {
+        /*
+            the constructors are not supposed to do anything
+            else but linking the class objects to each other
+        */
+        super(em);
         this.scrolling = new Scrolling(this);
         this.overviewFix = new OverviewFix(this);
+        this.panelUI = new PanelUI(this);
     }
     enable() {
         this.scrolling.enableScrollBehaviour();
