@@ -1,4 +1,4 @@
-import { Extension, ExtensionMetadata } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import Scrolling from './Scrolling.js';
 import OverviewFix from './OverviewFix.js';
 import PanelUI from './PanelUI.js';
@@ -24,7 +24,7 @@ export default class PanelPillExtension extends Extension {
     overviewFix: OverviewFix;
     panelUI: PanelUI;
 
-    constructor(em: ExtensionMetadata) {
+    constructor(em: any) {
         /*         
             the constructors are not supposed to do anything
             else but linking the class objects to each other
