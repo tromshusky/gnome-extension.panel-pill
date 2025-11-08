@@ -8,8 +8,8 @@ export default class Automove {
 
     #extension: PanelPillExtension;
     #ghostPanel: WidgetType | undefined;
-    #enterListener: number | undefined;
-    #leaveListener: number | undefined;
+    _enterListener: number | undefined;
+    _leaveListener: number | undefined;
     _enterEvent: any;
     _leaveEvent: any;
     _idk: any;
@@ -18,7 +18,7 @@ export default class Automove {
         this.#extension = ppe;
     }
 
-    enable():PanelPillExtension {
+    enable(): PanelPillExtension {
         this.#ghostPanel = newTopWidget(Main.layoutManager.panelBox);
         this.#ghostPanel.x -= 10;
         this.#ghostPanel.y = 5;
@@ -28,7 +28,7 @@ export default class Automove {
         return this.#extension;
     }
 
-    disable():PanelPillExtension {
+    disable(): PanelPillExtension {
         this.disableAutomove();
         this.#ghostPanel?.destroy();
         this.#ghostPanel = undefined;
@@ -36,8 +36,8 @@ export default class Automove {
     }
 
     enableAutomove() {
-        this.#enterListener = this.#ghostPanel!.connect("enter-event", this.onEnter1);
-        this.#leaveListener = this.#ghostPanel!.connect("leave-event", this.onLeave1);
+        this._enterListener = this.#ghostPanel!.connect("enter-event", this.onEnter1.bind(this));
+        this._leaveListener = this.#ghostPanel!.connect("leave-event", this.onLeave1.bind(this));
         // this.#invisibleWidget.connect("leave-event", this.onLeaveInvi);
     }
 
