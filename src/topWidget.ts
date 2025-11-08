@@ -11,7 +11,9 @@ export const newTopWidget = (existingWidget?: WidgetType): WidgetType => {
         widget.y = existingWidget.y;
         widget.height = existingWidget.height;
         widget.width = existingWidget.width;
-        existingWidget.get_parent()?.add_child(widget);
+        const parent = existingWidget.get_parent();
+        parent?.add_child(widget);
+        parent?.set_child_above_sibling(Main.layoutManager.panelBox,widget);
     } else {
         widget.x = 0;
         widget.y = 0;
