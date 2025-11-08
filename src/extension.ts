@@ -36,8 +36,7 @@ export default class PanelPillExtension extends Extension {
     }
 
     disable() {
-        this.automove.disable();
-        this.pill.disable();
+        this.automove.disable().pill.disable();
     }
 
 }
