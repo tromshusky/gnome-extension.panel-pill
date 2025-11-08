@@ -4,6 +4,8 @@ import OverviewFix from './OverviewFix.js';
 import Pill from './Pill.js';
 import PanelUI from "./panelUI.js";
 
+export const GAP_HEIGHT = 4;
+export const AUTOMOVE_DISTANCE = 10;
 
 export default class PanelPillExtension extends Extension {
 
