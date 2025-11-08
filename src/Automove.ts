@@ -4,9 +4,6 @@ import PanelPillExtension from "./extension.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
 
 
-// this library doesnt know "global"
-const GLOBAL: any = global;
-
 export default class Automove {
 
     #extension: PanelPillExtension;
