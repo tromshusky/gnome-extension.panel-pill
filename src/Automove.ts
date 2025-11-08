@@ -18,19 +18,21 @@ export default class Automove {
         this.#extension = ppe;
     }
 
-    enable() {
+    enable():PanelPillExtension {
         this.#ghostPanel = newTopWidget(Main.layoutManager.panelBox);
         this.#ghostPanel.x -= 10;
         this.#ghostPanel.y = 5;
         this.#ghostPanel.width += 20;
         this.#ghostPanel.height = Main.panel.height + 5;
         this.enableAutomove();
+        return this.#extension;
     }
 
-    disable() {
+    disable():PanelPillExtension {
         this.disableAutomove();
         this.#ghostPanel?.destroy();
         this.#ghostPanel = undefined;
+        return this.#extension;
     }
 
     enableAutomove() {

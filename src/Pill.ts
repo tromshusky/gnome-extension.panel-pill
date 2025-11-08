@@ -10,12 +10,14 @@ export default class Pill {
         this.#extension = ppe;
     }
 
-    enable() {
+    enable(): PanelPillExtension {
         PanelUI.shrinkToPill();
+        return this.#extension;
     }
 
-    disable() {
+    disable(): PanelPillExtension {
         PanelUI.expandToNormal();
+        return this.#extension;
     }
 
 }

@@ -9,7 +9,7 @@ export default class PanelPillExtension extends Extension {
 
     overviewFix: OverviewFix;
     pill: Pill;
-    automove: any;
+    automove: Automove;
 
     //underscore properties will be availiable through the global variable for debugging purposes
     _PanelUI: any;
@@ -32,8 +32,7 @@ export default class PanelPillExtension extends Extension {
         // this library doesnt know "global"
         // @ts-expect-error 
         global._panelpill = this;
-        this.automove.enable();
-        this.pill.enable();
+        this.pill.enable().automove.enable();
     }
 
     disable() {
