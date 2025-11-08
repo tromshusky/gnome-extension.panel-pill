@@ -7,6 +7,8 @@ import PanelUI from "./panelUI.js";
 export const GAP_HEIGHT = 4;
 export const AUTOMOVE_DISTANCE = 96;
 export const AUTOMOVE_MS = 150;
+export const COMEBACK_MS = 5000;
+
 
 export default class PanelPillExtension extends Extension {
 
