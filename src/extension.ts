@@ -5,7 +5,8 @@ import Pill from './Pill.js';
 import PanelUI from "./panelUI.js";
 
 export const GAP_HEIGHT = 4;
-export const AUTOMOVE_DISTANCE = 10;
+export const AUTOMOVE_DISTANCE = 96;
+export const AUTOMOVE_MS = 150;
 
 export default class PanelPillExtension extends Extension {
 

@@ -1,6 +1,6 @@
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import PanelPillExtension, { AUTOMOVE_DISTANCE, GAP_HEIGHT } from "./extension.js";
+import PanelPillExtension, { AUTOMOVE_DISTANCE, AUTOMOVE_MS, GAP_HEIGHT } from "./extension.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
 
 
@@ -52,7 +52,7 @@ export default class Automove {
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
             translation_y: - Main.panel.height,
-            duration: 300,
+            duration: AUTOMOVE_MS,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             // onComplete: callback
         });
