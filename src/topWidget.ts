@@ -1,5 +1,5 @@
 import St from "gi://St";
-import { PANEL_HEIGHT } from "./extension.js";
+import * as Main from "resource:///org/gnome/shell/ui/main.js";
 
 export type WidgetType = St.Widget;
 
@@ -8,12 +8,21 @@ export type WidgetType = St.Widget;
 // @ts-expect-error 
 const global = global;
 
-export const newTopWidget = (): WidgetType => {
+export const newTopWidget = (existingWidget?: WidgetType): WidgetType => {
     const widget = new St.Widget();
-    widget.x = 0;
-    widget.y = 0;
-    widget.height = PANEL_HEIGHT;
-    widget.width = global.screen_width;
+    if (existingWidget !== undefined) {
+        widget.x = existingWidget.x;
+        widget.y = existingWidget.y;
+        widget.height = existingWidget.height;
+        widget.width = existingWidget.width;
+        existingWidget.get_parent()?.add_child(widget);
+    } else {
+        widget.x = 0;
+        widget.y = 0;
+        widget.height = Main.panel.height;
+        widget.width = global.screen_width;
+        Main.layoutManager.panelBox.get_parent()?.add_child(widget);
+    }
     widget.reactive = true;
     return widget;
 };
