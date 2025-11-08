@@ -3,22 +3,6 @@ import Automove from './Automove.js';
 import OverviewFix from './OverviewFix.js';
 import Pill from './Pill.js';
 
-export const DURATION_ASIDE = 7000;
-export const DURATION_ASIDE_VERYLONG = 1000000;
-export const DURATION_FLICK = 200;
-export const DURATION_RETURN = 2000;
-// PANEL_HEIGHT will also be the gap above fullscreen windows
-export const PANEL_HEIGHT = 2;
-export const PANEL_OPACITY_HIGH = 225;
-export const PANEL_OPACITY_LOW = 100;
-export const PANEL_OPACITY_MAX = 255;
-export const PANEL_XY_RATIO = 20;
-export const PANEL_Y = 0;
-export const STILL_ON_SCREEN_PIXEL = 4;
-export const ROUND_CORNER_DELAY = 1000;
-export const DOUBLE_SCROLL_DELAY = 300;
-
-export const INVISIBLE_MOVE_CLOSER_MARGIN = 10;
 
 export default class PanelPillExtension extends Extension {
 
