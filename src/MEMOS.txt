@@ -1,0 +1,10 @@
+small = () => {Main.panel.height = 10}
+big = () => {Main.panel.height = 40}
+
+aaa = Main.layoutManager.panelBox
+ooo = inivisbleBox
+
+Main.layoutManager.panelBox.get_parent().set_child_above_sibling(Main.layoutManager.panelBox,ooo)
+
+ev1 = ooo.connect("enter-event",small)
+ev2 = ooo.connect("leave-event",big)
