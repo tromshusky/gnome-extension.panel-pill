@@ -3,9 +3,9 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import PanelPillExtension from "./extension.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
 
+
 // this library doesnt know "global"
-// @ts-expect-error 
-const global = global;
+const GLOBAL: any = global;
 
 export default class Automove {
 
@@ -13,6 +13,9 @@ export default class Automove {
     #ghostPanel: WidgetType | undefined;
     #enterListener: number | undefined;
     #leaveListener: number | undefined;
+    _enterEvent: any;
+    _leaveEvent: any;
+    _idk: any;
 
     constructor(ppe: PanelPillExtension) {
         this.#extension = ppe;
@@ -43,8 +46,9 @@ export default class Automove {
 
     }
 
-    onEnter1(ghostPanel: string, event: any) {
-        global._panelpill.enterEvent = event;
+    onEnter1(idk: string, event: any) {
+        this._idk = idk;
+        this._enterEvent = event;
         Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
@@ -55,8 +59,8 @@ export default class Automove {
         });
     }
 
-    onLeave1(ghostPanel: string, event: any) {
-        global._panelpill.leaveEvent = event;
+    onLeave1(idk: string, event: any) {
+        this._leaveEvent = event;
         Main.layoutManager.panelBox.translation_y = 0;
     }
 

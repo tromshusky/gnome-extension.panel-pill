@@ -4,10 +4,6 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 export type WidgetType = St.Widget;
 
 
-// this library doesnt know "global"
-// @ts-expect-error 
-const global = global;
-
 export const newTopWidget = (existingWidget?: WidgetType): WidgetType => {
     const widget = new St.Widget();
     if (existingWidget !== undefined) {
