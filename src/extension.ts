@@ -2,12 +2,14 @@ import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import Automove from './Automove.js';
 import OverviewFix from './OverviewFix.js';
 import Pill from './Pill.js';
-import PanelUI from "./panelUI.js";
+import PanelUI from "./PanelUI.js";
 
 export const GAP_HEIGHT = 4;
 export const AUTOMOVE_DISTANCE = 96;
 export const AUTOMOVE_MS = 150;
 export const COMEBACK_MS = 5000;
+export const OPACITY_TRANSPARENT = 200;
+export const OPACITY_SOLID = 255;
 
 
 export default class PanelPillExtension extends Extension {

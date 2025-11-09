@@ -1,8 +1,8 @@
 import Clutter from "gi://Clutter";
 import GLib from "gi://GLib";
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import PanelPillExtension, { AUTOMOVE_DISTANCE, AUTOMOVE_MS, COMEBACK_MS, GAP_HEIGHT } from "./extension.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
+import PanelUI from "./PanelUI.js";
 
 
 export default class Automove {
@@ -40,12 +40,12 @@ class _Automove {
     readonly ghostPanel: WidgetType;
 
     constructor() {
-        this.ghostPanel = newTopWidget(Main.layoutManager.panelBox);
+        this.ghostPanel = newTopWidget(PanelUI.getBox());
 
-        this.#ghostX = Main.layoutManager.panelBox.x - AUTOMOVE_DISTANCE;
+        this.#ghostX = PanelUI.getBoxX() - AUTOMOVE_DISTANCE;
         this.#ghostY = GAP_HEIGHT;
-        this.#ghostWidth = Main.layoutManager.panelBox.width + AUTOMOVE_DISTANCE + AUTOMOVE_DISTANCE;
-        this.#ghostHeight = Main.panel.height + AUTOMOVE_DISTANCE - GAP_HEIGHT;
+        this.#ghostWidth = PanelUI.getBoxWidth() + AUTOMOVE_DISTANCE + AUTOMOVE_DISTANCE;
+        this.#ghostHeight = PanelUI.getPanel().height + AUTOMOVE_DISTANCE - GAP_HEIGHT;
 
         this.setGhostYUp();
 
@@ -75,7 +75,7 @@ class _Automove {
 
     enableAutomove() {
         this._mouseOverGhostListener = this.ghostPanel.connect("enter-event", this.onGhostPanelMouseEnter.bind(this));
-        this._forceShowListener = Main.panel.connect("enter-event", this.movePanelDown.bind(this));
+        this._forceShowListener = PanelUI.getPanel().connect("enter-event", PanelUI.movePanelDown);
         // this.#invisibleWidget.connect("leave-event", this.onLeaveInvi);
     }
 
@@ -91,7 +91,7 @@ class _Automove {
         }
         this.setGhostYDown();
 
-        Main.layoutManager.panelBox.ease({
+        PanelUI.easeBox({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
             translation_y: GAP_HEIGHT - Main.panel.height,
@@ -103,13 +103,7 @@ class _Automove {
 
     onPanelArriveTop() {
         if (this._unhideTimeoutID !== undefined) clearTimeout(this._unhideTimeoutID);
-        this._unhideTimeoutID = setTimeout(this.movePanelDown.bind(this), COMEBACK_MS);
-    }
-
-    movePanelDown() {
-
-        Main.layoutManager.panelBox.translation_y = 0;
-
+        this._unhideTimeoutID = setTimeout(PanelUI.movePanelDown, COMEBACK_MS);
     }
 
 }

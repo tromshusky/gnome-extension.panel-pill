@@ -1,5 +1,5 @@
 import PanelPillExtension from "./extension.js";
-import PanelUI from "./panelUI.js";
+import PanelUI from "./PanelUI.js";
 
 
 export default class Pill {
