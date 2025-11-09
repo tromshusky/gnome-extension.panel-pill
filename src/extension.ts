@@ -1,20 +1,20 @@
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import Automove from './Automove.js';
-import OverviewFix from './OverviewFix.js';
+import OverviewAndRoundingFix from './OverviewAndRoundingFix.js';
 import Pill from './Pill.js';
 import PanelUI from "./PanelUI.js";
 
-export const GAP_HEIGHT = 4;
 export const AUTOMOVE_DISTANCE = 96;
 export const AUTOMOVE_MS = 150;
 export const COMEBACK_MS = 5000;
-export const OPACITY_TRANSPARENT = 200;
+export const GAP_HEIGHT = 4;
 export const OPACITY_SOLID = 255;
-
+export const OPACITY_TRANSPARENT = 200;
+export const ROUND_CORNER_DELAY = 1000;
 
 export default class PanelPillExtension extends Extension {
 
-    overviewFix: OverviewFix;
+    overviewFix: OverviewAndRoundingFix;
     pill: Pill;
     automove: Automove;
 
@@ -28,7 +28,7 @@ export default class PanelPillExtension extends Extension {
         */
         super(em);
         this.automove = new Automove(this);
-        this.overviewFix = new OverviewFix(this);
+        this.overviewFix = new OverviewAndRoundingFix(this);
         this.pill = new Pill(this);
 
         this._PanelUI = PanelUI;

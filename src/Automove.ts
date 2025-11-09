@@ -1,7 +1,7 @@
 import GLib from "gi://GLib";
 import PanelPillExtension, { AUTOMOVE_DISTANCE, AUTOMOVE_MS, COMEBACK_MS, GAP_HEIGHT } from "./extension.js";
-import { newTopWidget, WidgetType } from './topWidget.js';
 import PanelUI from "./PanelUI.js";
+import { newTopWidget, WidgetType } from './topWidget.js';
 
 
 export default class Automove {

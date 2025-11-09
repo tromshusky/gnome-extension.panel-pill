@@ -4,6 +4,15 @@ import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import { AUTOMOVE_MS, GAP_HEIGHT, OPACITY_SOLID, OPACITY_TRANSPARENT } from "./extension.js";
 
 export default class PanelUI {
+    static overviewDisconnect(eventID: number) {
+        return Main.overview.disconnect(eventID);
+    }
+    static overviewConnect(eventname: string, fun: () => any): number {
+        return Main.overview.connect(eventname, fun);
+    }
+    static makePlaceInOverview() {
+        Main.overview._overview.first_child.first_child.margin_top = Main.layoutManager.panelBox.y + Main.panel.height + Main.layoutManager.panelBox.y;
+    }
     static setRoundStyle() {
         Main.panel.set_style("border-radius: " + Main.panel.height + "px;");
     }
