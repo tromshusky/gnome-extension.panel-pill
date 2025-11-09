@@ -39,11 +39,11 @@ export default class PanelPillExtension extends Extension {
         // this library doesnt know "global"
         // @ts-expect-error 
         global._panelpill = this;
-        this.pill.enable().automove.enable();
+        this.pill.enable().automove.enable().overviewFix.enable();
     }
 
     disable() {
-        this.automove.disable().pill.disable();
+        this.automove.disable().pill.disable().overviewFix.disable();
     }
 
 }

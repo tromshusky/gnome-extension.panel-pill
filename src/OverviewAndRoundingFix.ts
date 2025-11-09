@@ -13,9 +13,16 @@ export default class OverviewAndRoundingFix {
         this.#extension = ppe;
     }
 
-    enableAll() {
+    enable() {
         this.enableOverviewOpeningBehaviour();
         this.enableOverviewClosingBehaviour();
+        return this.#extension;
+    }
+
+    disable(){
+        this.disableOverviewOpeningBehaviour();
+        this.disableOverviewClosingBehaviour();
+        return this.#extension;
     }
 
     overviewClosingDelayedBehaviour() {
