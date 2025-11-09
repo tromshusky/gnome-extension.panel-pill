@@ -9,7 +9,7 @@ export const AUTOMOVE_MS = 150;
 export const COMEBACK_MS = 5000;
 export const GAP_HEIGHT = 4;
 export const OPACITY_SOLID = 255;
-export const OPACITY_TRANSPARENT = 200;
+export const OPACITY_TRANSPARENT = 220;
 export const ROUND_CORNER_DELAY = 1000;
 
 export default class PanelPillExtension extends Extension {

@@ -22,14 +22,18 @@ export default class PanelUI {
     static easeBox(props: EasingParamsWithProperties) {
         return Main.layoutManager.panelBox.ease(props);
     }
-    static easeBoxUp(callback?: () => void) {
+    static easeBoxUp(callback?: () => any) {
+        const translationDiffY = GAP_HEIGHT - Main.panel.height;
         return Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
-            translation_y: GAP_HEIGHT - Main.panel.height,
+            translation_y: translationDiffY,
             duration: AUTOMOVE_MS,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: callback
+            onComplete: () => {
+                if (callback) callback();
+                Main.layoutManager.panelBox.height = Main.panel.height;
+            }
         });
     }
     static getPanel() {
@@ -70,5 +74,6 @@ export default class PanelUI {
     }
     static movePanelDown() {
         Main.layoutManager.panelBox.translation_y = 0;
+        Main.layoutManager.panelBox.height = GAP_HEIGHT;
     }
 };
