@@ -3,6 +3,12 @@ import { GAP_HEIGHT, OPACITY_SOLID, OPACITY_TRANSPARENT } from "./extension.js";
 import { EasingParamsWithProperties } from "@girs/gnome-shell/extensions/global";
 
 export default class PanelUI {
+    static setRoundStyle() {
+        Main.panel.set_style("border-radius: " + Main.panel.height + "px;");
+    }
+    static setNoStyle() {
+        Main.panel.set_style("");
+    }
     static easeBox(props: EasingParamsWithProperties){
         return Main.layoutManager.panelBox.ease(props);
     }
@@ -36,7 +42,7 @@ export default class PanelUI {
         Main.layoutManager.panelBox.width = global.screen_width;
         Main.layoutManager.panelBox.height = Main.panel.height;
     }
-    static activateTransparency() {
+    static setLowTransparency() {
         Main.layoutManager.panelBox.opacity = OPACITY_TRANSPARENT;
     }
     static setNoTransparency() {

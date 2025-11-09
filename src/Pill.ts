@@ -12,11 +12,15 @@ export default class Pill {
 
     enable(): PanelPillExtension {
         PanelUI.shrinkToPill();
+        PanelUI.setLowTransparency();
+        PanelUI.setRoundStyle();
         return this.#extension;
     }
 
     disable(): PanelPillExtension {
         PanelUI.expandToNormal();
+        PanelUI.setNoTransparency();
+        PanelUI.setNoStyle();
         return this.#extension;
     }
 
