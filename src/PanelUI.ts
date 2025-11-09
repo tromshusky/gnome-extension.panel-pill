@@ -1,6 +1,7 @@
-import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { GAP_HEIGHT, OPACITY_SOLID, OPACITY_TRANSPARENT } from "./extension.js";
 import { EasingParamsWithProperties } from "@girs/gnome-shell/extensions/global";
+import Clutter from "gi://Clutter";
+import * as Main from "resource:///org/gnome/shell/ui/main.js";
+import { AUTOMOVE_MS, GAP_HEIGHT, OPACITY_SOLID, OPACITY_TRANSPARENT } from "./extension.js";
 
 export default class PanelUI {
     static setRoundStyle() {
@@ -9,13 +10,23 @@ export default class PanelUI {
     static setNoStyle() {
         Main.panel.set_style("");
     }
-    static easeBox(props: EasingParamsWithProperties){
+    static easeBox(props: EasingParamsWithProperties) {
         return Main.layoutManager.panelBox.ease(props);
     }
-    static getPanel(){
+    static easeBoxUp(callback?: () => void) {
+        return Main.layoutManager.panelBox.ease({
+            // somehow the library in use doesnt support translation_x and translation_y
+            // @ts-expect-error 
+            translation_y: GAP_HEIGHT - Main.panel.height,
+            duration: AUTOMOVE_MS,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
+            onComplete: callback
+        });
+    }
+    static getPanel() {
         return Main.panel;
     }
-    static getBox(){
+    static getBox() {
         return Main.layoutManager.panelBox;
     }
     static getBoxHeight(): number {

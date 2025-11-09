@@ -1,4 +1,3 @@
-import Clutter from "gi://Clutter";
 import GLib from "gi://GLib";
 import PanelPillExtension, { AUTOMOVE_DISTANCE, AUTOMOVE_MS, COMEBACK_MS, GAP_HEIGHT } from "./extension.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
@@ -91,14 +90,7 @@ class _Automove {
         }
         this.setGhostYDown();
 
-        PanelUI.easeBox({
-            // somehow the library in use doesnt support translation_x and translation_y
-            // @ts-expect-error 
-            translation_y: GAP_HEIGHT - Main.panel.height,
-            duration: AUTOMOVE_MS,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
-            onComplete: this.onPanelArriveTop.bind(this)
-        });
+        PanelUI.easeBoxUp(this.onPanelArriveTop.bind(this));
     }
 
     onPanelArriveTop() {
