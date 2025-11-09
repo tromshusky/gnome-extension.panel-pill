@@ -1,5 +1,5 @@
 import GLib from "gi://GLib";
-import PanelPillExtension, { AUTOMOVE_DISTANCE, AUTOMOVE_MS, COMEBACK_MS, GAP_HEIGHT } from "./extension.js";
+import PanelPillExtension, { AUTOMOVE_DISTANCE, COMEBACK_MS, GAP_HEIGHT } from "./extension.js";
 import PanelUI from "./PanelUI.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
 
@@ -75,11 +75,13 @@ class _Automove {
     enableAutomove() {
         this._mouseOverGhostListener = this.ghostPanel.connect("enter-event", this.onGhostPanelMouseEnter.bind(this));
         this._forceShowListener = PanelUI.getPanel().connect("enter-event", PanelUI.movePanelDown);
-        // this.#invisibleWidget.connect("leave-event", this.onLeaveInvi);
     }
 
     disableAutomove() {
-        //TODO
+        if (this._mouseOverGhostListener !== undefined)
+            this.ghostPanel.disconnect(this._mouseOverGhostListener);
+        if (this._forceShowListener !== undefined)
+            PanelUI.getPanel().disconnect(this._forceShowListener);
     }
 
     onGhostPanelMouseEnter() {
