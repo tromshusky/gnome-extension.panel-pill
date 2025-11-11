@@ -12,14 +12,14 @@ export default class Pill {
 
     enable(): PanelPillExtension {
         PanelUI.shrinkToPill();
-        PanelUI.setLowTransparency();
+        PanelUI.setPillTransparency();
         PanelUI.setRoundStyle();
         return this.#extension;
     }
 
     disable(): PanelPillExtension {
         PanelUI.expandToNormal();
-        PanelUI.setNoTransparency();
+        PanelUI.setFactoryTransparency();
         PanelUI.setNoStyle();
         return this.#extension;
     }

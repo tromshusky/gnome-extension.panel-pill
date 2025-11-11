@@ -1,9 +1,18 @@
 import { EasingParamsWithProperties } from "@girs/gnome-shell/extensions/global";
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import { AUTOMOVE_MS, GAP_HEIGHT, OPACITY_SOLID, OPACITY_TRANSPARENT } from "./extension.js";
+import PanelPillExtension, { AUTOMOVE_MS, GAP_HEIGHT, LOW_OPACITY as OPACITY_LOW, OPACITY_SOLID, OPACITY_TRANSPARENT, REACTIVATION_MS } from "./extension.js";
+
 
 export default class PanelUI {
+    #extension: PanelPillExtension;
+
+    _inreactiveTimer: any;
+
+    constructor(ppe: PanelPillExtension) {
+        this.#extension = ppe;
+    }
+
     static overviewDisconnect(eventID: number) {
         return Main.overview.disconnect(eventID);
     }
@@ -66,14 +75,51 @@ export default class PanelUI {
         Main.layoutManager.panelBox.width = global.screen_width;
         Main.layoutManager.panelBox.height = Main.panel.height;
     }
+    static setFactoryTransparency() {
+        return PanelUI.setNoTransparency();
+    }
+    static setPillTransparency() {
+        return PanelUI.setLowTransparency();
+    }
     static setLowTransparency() {
         Main.layoutManager.panelBox.opacity = OPACITY_TRANSPARENT;
     }
     static setNoTransparency() {
         Main.layoutManager.panelBox.opacity = OPACITY_SOLID;
     }
-    static movePanelDown() {
+    static setHighTransparency() {
+        Main.layoutManager.panelBox.opacity = OPACITY_LOW;
+    }
+    /**
+     * moves the panel down into normal position and sets it temporary inreactive
+     * the panel has high opacity while not reactive
+     * @param reactivationTime time until panel turns reactive
+     */
+    movePanelDownAutoReactive(reactivationTime: number) {
+        if (Main.layoutManager.panelBox.translation_y === 0) return false;
         Main.layoutManager.panelBox.translation_y = 0;
         Main.layoutManager.panelBox.height = GAP_HEIGHT;
+        this.#setInreactiveTimer(reactivationTime);
+        return true;
+    }
+
+    /**
+     * sets the panel inreactive for a defined time
+     */
+    #setInreactiveTimer(reactivationTime: number) {
+        PanelUI.setReactiveFalse();
+        if (this._inreactiveTimer !== undefined)
+            clearTimeout(this._inreactiveTimer);
+        this._inreactiveTimer = setTimeout(PanelUI.setReactiveTrue, reactivationTime);
+    }
+
+    static setReactiveTrue(): void {
+        Main.panel.reactive = true;
+        PanelUI.setLowTransparency();
+    }
+
+    static setReactiveFalse(): void {
+        Main.panel.reactive = false;
+        PanelUI.setHighTransparency();
     }
 };

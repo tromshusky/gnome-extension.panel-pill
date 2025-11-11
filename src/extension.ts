@@ -7,19 +7,23 @@ import PanelUI from "./PanelUI.js";
 export const AUTOMOVE_DISTANCE = 96;
 export const AUTOMOVE_MS = 150;
 export const COMEBACK_MS = 5000;
+export const COMEBACK_INACTIVE_MS = 500;
 export const GAP_HEIGHT = 4;
 export const OPACITY_SOLID = 255;
 export const OPACITY_TRANSPARENT = 220;
+export const LOW_OPACITY = 100;
 export const ROUND_CORNER_DELAY = 300;
+export const REACTIVATION_MS = 400;
+export const FORCE_REACTIVATION_MS = 200;
 
 export default class PanelPillExtension extends Extension {
 
     overviewFix: OverviewAndRoundingFix;
     pill: Pill;
     automove: Automove;
+    panelUI: any;
 
-    //underscore properties will be availiable through the global variable for debugging purposes
-    _PanelUI: any;
+    _PanelUI;
 
     constructor(em: any) {
         /*         
@@ -30,6 +34,7 @@ export default class PanelPillExtension extends Extension {
         this.automove = new Automove(this);
         this.overviewFix = new OverviewAndRoundingFix(this);
         this.pill = new Pill(this);
+        this.panelUI = new PanelUI(this);
 
         this._PanelUI = PanelUI;
     }
