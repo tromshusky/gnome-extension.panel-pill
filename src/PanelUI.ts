@@ -64,7 +64,7 @@ export default class PanelUI {
         return Main.layoutManager.panelBox.y;
     }
     static shrinkToPill() {
-        Main.layoutManager.panelBox.x = global.screen_width * (100 - PANEL_WIDTH_PERCENT) / 2;
+        Main.layoutManager.panelBox.x = global.screen_width * (100 - PANEL_WIDTH_PERCENT) / 100 / 2;
         Main.layoutManager.panelBox.width = global.screen_width * PANEL_WIDTH_PERCENT / 100;
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.height = GAP_WINDOW_HEIGHT;
