@@ -1,5 +1,5 @@
 import GLib from "gi://GLib";
-import PanelPillExtension, { AUTOMOVE_DISTANCE, COMEBACK_MS, FORCE_REACTIVATION_MS, GAP_HEIGHT, REACTIVATION_MS } from "./extension.js";
+import PanelPillExtension, { AUTOMOVE_DISTANCE, COMEBACK_MS, FORCE_REACTIVATION_MS, GAP_WINDOW_HEIGHT, REACTIVATION_MS } from "./extension.js";
 import PanelUI from "./PanelUI.js";
 import { newTopWidget, WidgetType } from './topWidget.js';
 
@@ -44,9 +44,9 @@ class _Automove {
         this.ghostPanel = newTopWidget(PanelUI.getBox());
 
         this.#ghostX = PanelUI.getBoxX() - AUTOMOVE_DISTANCE;
-        this.#ghostY = GAP_HEIGHT;
+        this.#ghostY = GAP_WINDOW_HEIGHT;
         this.#ghostWidth = PanelUI.getBoxWidth() + AUTOMOVE_DISTANCE + AUTOMOVE_DISTANCE;
-        this.#ghostHeight = PanelUI.getPanel().height + AUTOMOVE_DISTANCE - GAP_HEIGHT;
+        this.#ghostHeight = PanelUI.getPanel().height + AUTOMOVE_DISTANCE - GAP_WINDOW_HEIGHT;
 
         this.moveGhostpanelUp();
 

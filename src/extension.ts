@@ -8,22 +8,24 @@ export const AUTOMOVE_DISTANCE = 96;
 export const AUTOMOVE_MS = 150;
 export const COMEBACK_MS = 5000;
 export const COMEBACK_INACTIVE_MS = 500;
-export const GAP_HEIGHT = 4;
+export const GAP_WINDOW_HEIGHT = 4;
+export const GAP_PILL_HEIGHT = 2;
 export const OPACITY_SOLID = 255;
 export const OPACITY_TRANSPARENT = 220;
 export const LOW_OPACITY = 100;
 export const ROUND_CORNER_DELAY = 300;
 export const REACTIVATION_MS = 2000;
 export const FORCE_REACTIVATION_MS = 400;
+export const PANEL_WIDTH_PERCENT = 33;
 
 export default class PanelPillExtension extends Extension {
 
     overviewFix: OverviewAndRoundingFix;
     pill: Pill;
     automove: Automove;
-    panelUI: any;
+    panelUI: PanelUI;
 
-    _PanelUI;
+    _PanelUI: typeof PanelUI;
 
     constructor(em: any) {
         /*         

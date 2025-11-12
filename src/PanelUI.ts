@@ -1,7 +1,7 @@
 import { EasingParamsWithProperties } from "@girs/gnome-shell/extensions/global";
 import Clutter from "gi://Clutter";
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import PanelPillExtension, { AUTOMOVE_MS, GAP_HEIGHT, LOW_OPACITY as OPACITY_LOW, OPACITY_SOLID, OPACITY_TRANSPARENT, REACTIVATION_MS } from "./extension.js";
+import PanelPillExtension, { AUTOMOVE_MS, GAP_PILL_HEIGHT, GAP_WINDOW_HEIGHT, LOW_OPACITY as OPACITY_LOW, OPACITY_SOLID, OPACITY_TRANSPARENT, PANEL_WIDTH_PERCENT, REACTIVATION_MS } from "./extension.js";
 
 
 export default class PanelUI {
@@ -32,7 +32,7 @@ export default class PanelUI {
         return Main.layoutManager.panelBox.ease(props);
     }
     static easeBoxUp(callback?: () => any) {
-        const translationDiffY = GAP_HEIGHT - Main.panel.height;
+        const translationDiffY = GAP_WINDOW_HEIGHT - Main.panel.height;
         return Main.layoutManager.panelBox.ease({
             // somehow the library in use doesnt support translation_x and translation_y
             // @ts-expect-error 
@@ -64,16 +64,18 @@ export default class PanelUI {
         return Main.layoutManager.panelBox.y;
     }
     static shrinkToPill() {
-        Main.layoutManager.panelBox.x = global.screen_width * 3 / 8;
-        Main.layoutManager.panelBox.width = global.screen_width / 4;
+        Main.layoutManager.panelBox.x = global.screen_width * (100 - PANEL_WIDTH_PERCENT) / 2;
+        Main.layoutManager.panelBox.width = global.screen_width * PANEL_WIDTH_PERCENT / 100;
         Main.layoutManager.panelBox.y = 0;
-        Main.layoutManager.panelBox.height = GAP_HEIGHT;
+        Main.layoutManager.panelBox.height = GAP_WINDOW_HEIGHT;
+        Main.panel.translation_y = GAP_PILL_HEIGHT;
     }
     static expandToNormal() {
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
         Main.layoutManager.panelBox.height = Main.panel.height;
+        Main.panel.translation_y = 0;
     }
     static setFactoryTransparency() {
         return PanelUI.setNoTransparency();
@@ -98,7 +100,7 @@ export default class PanelUI {
     movePanelDownAutoReactive(reactivationTime: number) {
         if (Main.layoutManager.panelBox.translation_y === 0) return false;
         Main.layoutManager.panelBox.translation_y = 0;
-        Main.layoutManager.panelBox.height = GAP_HEIGHT;
+        Main.layoutManager.panelBox.height = GAP_WINDOW_HEIGHT;
         this.#setInreactiveTimer(reactivationTime);
         return true;
     }
