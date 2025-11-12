@@ -113,13 +113,25 @@ export default class PanelUI {
         this._inreactiveTimer = setTimeout(PanelUI.setReactiveTrue, reactivationTime);
     }
 
+    static #foreachPanelButton(buttonFun: (button: Clutter.Actor) => void) {
+        const threeGroups = Main.panel.get_children();
+        threeGroups.forEach(group => {
+            const buttonBoxes = group.get_children();
+            buttonBoxes.forEach(buttonBox => {
+                buttonFun(buttonBox.first_child);
+            })
+        });
+    }
+
     static setReactiveTrue(): void {
         Main.panel.reactive = true;
+        PanelUI.#foreachPanelButton(button => { button.reactive = true; });
         PanelUI.setLowTransparency();
     }
 
     static setReactiveFalse(): void {
         Main.panel.reactive = false;
+        PanelUI.#foreachPanelButton(button => { button.reactive = false; });
         PanelUI.setHighTransparency();
     }
 };
