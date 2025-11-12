@@ -13,7 +13,7 @@ export const OPACITY_SOLID = 255;
 export const OPACITY_TRANSPARENT = 220;
 export const LOW_OPACITY = 100;
 export const ROUND_CORNER_DELAY = 300;
-export const REACTIVATION_MS = 800;
+export const REACTIVATION_MS = 2000;
 export const FORCE_REACTIVATION_MS = 400;
 
 export default class PanelPillExtension extends Extension {
