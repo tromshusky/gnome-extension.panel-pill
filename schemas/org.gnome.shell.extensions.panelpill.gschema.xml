@@ -1,0 +1,9 @@
+<schemalist>
+  <schema id="org.gnome.shell.extensions.panelpill" path="/org/gnome/shell/extensions/panelpill/">
+    <key name="square-corners" type="b">
+      <default>false</default>
+      <summary>Square Corners</summary>
+      <description>If you don't like round corners, here is an option to make them square.</description>
+    </key>
+  </schema>
+</schemalist>
