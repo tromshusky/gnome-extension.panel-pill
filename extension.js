@@ -157,6 +157,7 @@ export default class PanelPillExtension extends Extension {
         this.makePanelRound();
         Main.layoutManager.panelBox.height = 0;
         Main.layoutManager.panelBox.y = PANEL_Y;
+        Main.panel.translation_y = 0;
     }
 
     enableOverviewClosingBehaviour() {
@@ -177,7 +178,7 @@ export default class PanelPillExtension extends Extension {
     overviewOpeningBehaviour() {
         Main.layoutManager.panelBox.height = Main.panel.height;
         Main.layoutManager.panelBox.y = 0;
-
+        Main.panel.translation_y = PANEL_Y;
         // the following code would create a big enough margin above the search bar
         // but the "showing" connector does only react on opening the app grid
         // Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
