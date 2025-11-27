@@ -16,6 +16,7 @@ const PANEL_OPACITY_MAX = 255;
 const PANEL_OPACITY_LOW = 100;
 const PANEL_RATIO = 20;
 const PANEL_Y = 4;
+const ROUND_CORNERS_DELAY = 300;
 const SCROLL_DIRECTION_DOWN = 0;
 const SCROLL_DIRECTION_LEFT = 3;
 const SCROLL_DIRECTION_RIGHT = 2;
@@ -132,7 +133,7 @@ export default class PanelPillExtension extends Extension {
         // for some funny reason its better to repeat after a delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
-        this.#timeoutRoundnessID = setTimeout(make_round, 1000);
+        this.#timeoutRoundnessID = setTimeout(make_round, ROUND_CORNERS_DELAY);
     }
 
     enableOverviewClosingBehaviour() {
