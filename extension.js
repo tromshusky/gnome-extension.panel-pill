@@ -54,6 +54,7 @@ export default class PanelPillExtension extends Extension {
     #mainPanelClickListenerID1 = null;
     #windowManagerResizeListenerID1 = null;
     #mainPanelScrollListenerID1 = null;
+    #squareToggleListenerID = null;
 
     #timeoutVanishID = null;
     #timeoutFadeinID = null;
@@ -71,8 +72,8 @@ export default class PanelPillExtension extends Extension {
         this.enableScrollBehaviour();
         this.enableOverviewOpeningBehaviour();
         this.enableOverviewClosingBehaviour();
+        this.enableSquareToggleListener();
         this.resizeToPill();
-
     }
 
     disable() {
@@ -81,6 +82,7 @@ export default class PanelPillExtension extends Extension {
         this.disableScrollBehaviour();
         this.disableOverviewOpeningBehaviour();
         this.disableOverviewClosingBehaviour();
+        this.disableSquareToggleListener();
         this.resizeBackToVanilla();
         Main.panel.opacity = PANEL_OPACITY_MAX;
     }
@@ -90,6 +92,20 @@ export default class PanelPillExtension extends Extension {
             this.#settings = this.getSettings();
         }
         return this.#settings;
+    }
+
+    disableSquareToggleListener(){
+        if (this.#squareToggleListenerID !== null){
+            this._settings.disconnect(this.#squareToggleListenerID);
+        }
+        this.#squareToggleListenerID = null;
+    }
+
+    enableSquareToggleListener(){
+        if (this.#squareToggleListenerID !== null){
+            this._settings.disconnect(this.#squareToggleListenerID);
+        }
+        this.#squareToggleListenerID = this._settings.connect('changed::show-indicator', this.makePanelRound.bind(this));
     }
 
     isSquareCornersEnabled(){ 
@@ -150,8 +166,6 @@ export default class PanelPillExtension extends Extension {
             clearTimeout(this.#timeoutRoundnessID);
         this.#timeoutRoundnessID = null;
     }
-
-
 
     overviewOpeningBehaviour() {
         Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
