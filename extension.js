@@ -61,6 +61,8 @@ export default class PanelPillExtension extends Extension {
 
     #ongoingAnimation = ANIMATION_NONE;
 
+    #settings = null;
+
     enable() {
         global._panelpill = {};
         // this.enableClickToHideBehaviour();
@@ -82,6 +84,16 @@ export default class PanelPillExtension extends Extension {
         Main.panel.opacity = PANEL_OPACITY_MAX;
     }
 
+    get _settings(){
+        if (this.#settings === null){
+            this.#settings = this.getSettings();
+        }
+        return this.#settings;
+    }
+
+    isSquareCornersEnabled(){ 
+        return this._settings.get_boolean("square-corners");
+    }
 
     resizeToPill() {
         const new_width = get_panel_width();
@@ -106,6 +118,10 @@ export default class PanelPillExtension extends Extension {
 
 
     makePanelRound() {
+        if (this.isSquareCornersEnabled()){
+            Main.panel.set_style("");
+            return;
+        }
         const new_radius = Main.panel.height;
         const make_round = () => {
             Main.panel.set_style("border-radius: " + new_radius + "px;");
