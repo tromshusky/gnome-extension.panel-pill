@@ -152,10 +152,17 @@ export default class PanelPillExtension extends Extension {
         this.#timeoutRoundnessID = setTimeout(make_round, ROUND_CORNERS_DELAY);
     }
 
+
+    overviewClosingBehaviour(){
+        this.makePanelRound();
+        Main.layoutManager.panelBox.height = 0;
+        Main.layoutManager.panelBox.y = PANEL_Y;
+    }
+
     enableOverviewClosingBehaviour() {
         if (this.#mainOverviewListenerID2 != null)
             Main.overview.disconnect(this.#mainOverviewListenerID2);
-        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', this.makePanelRound.bind(this));
+        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', this.overviewClosingBehaviour.bind(this));
     }
 
     disableOverviewClosingBehaviour() {
@@ -168,7 +175,12 @@ export default class PanelPillExtension extends Extension {
     }
 
     overviewOpeningBehaviour() {
-        Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
+        Main.layoutManager.panelBox.height = Main.panel.height;
+        Main.layoutManager.panelBox.y = 0;
+
+        // the following code would create a big enough margin above the search bar
+        // but the "showing" connector does only react on opening the app grid
+        // Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
     }
 
     enableOverviewOpeningBehaviour() {
