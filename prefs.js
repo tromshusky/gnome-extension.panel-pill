@@ -3,10 +3,17 @@ import Adw from 'gi://Adw';
 
 import { ExtensionPreferences, gettext } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-const STR1 = "square-corners";
-const settings = { [STR1]: ["Square Corners", "Wether the panel should have square corners"] };
-const group1 = ["Appearance", "Configure the appearance of the panel", [STR1]];
-const page1 = ["General", "dialog-information-symbolic", [group1]];
+const _SQR_COR = "square-corners";
+const _WIN_GAP = "top-gap";
+const _PNL_GAP = "panel-gap";
+const settings = {
+    [_SQR_COR]: ["Square Corners", "Wether the panel should have square corners"],
+    [_WIN_GAP]: ["Top Gap", "Wether there should be a gap above windows.\n\nThis can fix some issues where the panel visually disappears behind windows, but still reacts to clicks (some XWayland apps for example)."],
+    [_PNL_GAP]: ["Panel Gap", "Wether the panel should be a bit lowered, making it 'floating'."],
+};
+const group1 = ["Appearance", "Configure the appearance of the panel", [_SQR_COR, _PNL_GAP]];
+const group2 = ["Other", "Other panel related settings.", [_WIN_GAP]];
+const page1 = ["General", "dialog-information-symbolic", [group1, group2]];
 const my_settings = [page1];
 
 export default class ExamplePreferences extends ExtensionPreferences {

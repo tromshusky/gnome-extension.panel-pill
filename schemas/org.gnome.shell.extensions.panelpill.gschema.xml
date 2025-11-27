@@ -2,8 +2,12 @@
   <schema id="org.gnome.shell.extensions.panelpill" path="/org/gnome/shell/extensions/panelpill/">
     <key name="square-corners" type="b">
       <default>false</default>
-      <summary>Square Corners</summary>
-      <description>If you don't like round corners, here is an option to make them square.</description>
+    </key>
+    <key name="panel-gap" type="b">
+      <default>true</default>
+    </key>
+    <key name="top-gap" type="b">
+      <default>false</default>
     </key>
   </schema>
 </schemalist>

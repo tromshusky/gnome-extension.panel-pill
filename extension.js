@@ -15,7 +15,7 @@ const PANEL_OPACITY_HIGH = 225;
 const PANEL_OPACITY_MAX = 255;
 const PANEL_OPACITY_LOW = 100;
 const PANEL_RATIO = 20;
-const PANEL_Y = 4;
+const PANEL_GAP = 4;
 const ROUND_CORNERS_DELAY = 300;
 const SCROLL_DIRECTION_DOWN = 0;
 const SCROLL_DIRECTION_LEFT = 3;
@@ -24,6 +24,7 @@ const SCROLL_DIRECTION_UP = 1;
 const STILL_ON_SCREEN_PIXEL = 4;
 const TIEMOUT_HIDDEN = 7000;
 const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
+const WINDOW_GAP = 2;
 const ANIMATION_NONE = -1;
 const ANIMATION_LEFT = 0;
 const ANIMATION_LEFTLEFT = 1;
@@ -32,6 +33,9 @@ const ANIMATION_RIGHTRIGHT = 3;
 const ANIMATION_DOWN = 4;
 const ANIMATION_UP = 5;
 
+const SETTING_PANEL_GAP = "panel-gap";
+const SETTING_WINDOW_GAP = "top-gap";
+const SETTING_SQUARE_CORNERS = "square-corners";
 
 const set_panel_reactivity = (value) => {
     Main.panel.get_children().map(e => {
@@ -87,36 +91,58 @@ export default class PanelPillExtension extends Extension {
         Main.panel.opacity = PANEL_OPACITY_MAX;
     }
 
-    get _settings(){
-        if (this.#settings === null){
+    get _settings() {
+        if (this.#settings === null) {
             this.#settings = this.getSettings();
         }
         return this.#settings;
     }
 
-    disableSquareToggleListener(){
-        if (this.#squareToggleListenerID !== null){
+    get panelHeight() {
+        return this.isSettingTrue(SETTING_WINDOW_GAP) ?
+            WINDOW_GAP
+            : 0;
+    }
+
+    get panelTopMargin() {
+        return this.isSettingTrue(SETTING_PANEL_GAP) ?
+            PANEL_GAP
+            : 0;
+    }
+
+    get panelSidewaysMargin() {
+        return PANEL_GAP;
+    }
+
+    disableSquareToggleListener() {
+        if (this.#squareToggleListenerID !== null) {
             this._settings.disconnect(this.#squareToggleListenerID);
         }
         this.#squareToggleListenerID = null;
     }
 
-    enableSquareToggleListener(){
-        if (this.#squareToggleListenerID !== null){
+    enableSquareToggleListener() {
+        if (this.#squareToggleListenerID !== null) {
             this._settings.disconnect(this.#squareToggleListenerID);
         }
-        this.#squareToggleListenerID = this._settings.connect('changed::square-corners', this.makePanelRound.bind(this));
+        // this.#squareToggleListenerID = this._settings.connect(`changed::${SETTING_SQUARE_CORNERS}`, this.makePanelRound.bind(this));
+        this.#squareToggleListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
     }
 
-    isSquareCornersEnabled(){ 
-        return this._settings.get_boolean("square-corners");
+    onSettingChanged() {
+        this.overviewClosingBehaviour();
+        Main.panel.translation_y = this.panelTopMargin;
+    }
+
+    isSettingTrue(settingID) {
+        return this._settings.get_boolean(settingID);
     }
 
     resizeToPill() {
         const new_width = get_panel_width();
         const new_x = (global.screen_width - new_width) / 2;
+        Main.panel.translation_y = this.panelTopMargin;
         Main.layoutManager.panelBox.x = new_x;
-        Main.layoutManager.panelBox.y = PANEL_Y;
         Main.layoutManager.panelBox.width = new_width;
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with height = 0 the panel itself stays on the normal height.
@@ -127,15 +153,14 @@ export default class PanelPillExtension extends Extension {
 
     resizeBackToVanilla() {
         Main.layoutManager.panelBox.x = 0;
-        Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
-
+        Main.panel.translation_y = 0;
         Main.panel.set_style("");
     }
 
 
     makePanelRound() {
-        if (this.isSquareCornersEnabled()){
+        if (this.isSettingTrue(SETTING_SQUARE_CORNERS)) {
             Main.panel.set_style("");
             return;
         }
@@ -153,11 +178,10 @@ export default class PanelPillExtension extends Extension {
     }
 
 
-    overviewClosingBehaviour(){
+
+    overviewClosingBehaviour() {
         this.makePanelRound();
-        Main.layoutManager.panelBox.height = 0;
-        Main.layoutManager.panelBox.y = PANEL_Y;
-        Main.panel.translation_y = 0;
+        Main.layoutManager.panelBox.height = this.panelHeight;
     }
 
     enableOverviewClosingBehaviour() {
@@ -177,8 +201,6 @@ export default class PanelPillExtension extends Extension {
 
     overviewOpeningBehaviour() {
         Main.layoutManager.panelBox.height = Main.panel.height;
-        Main.layoutManager.panelBox.y = 0;
-        Main.panel.translation_y = PANEL_Y;
         // the following code would create a big enough margin above the search bar
         // but the "showing" connector does only react on opening the app grid
         // Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
@@ -287,7 +309,7 @@ export default class PanelPillExtension extends Extension {
         const requestEnforcingDirection = alreadyMovingSoft && strong;
         const invalidAnimationOverride = hasAnimation && !requestEnforcingDirection;
 
-        const theVeryEnd = isRight ? (Main.layoutManager.panelBox.x - PANEL_Y) : (PANEL_Y - Main.layoutManager.panelBox.x);
+        const theVeryEnd = isRight ? (Main.layoutManager.panelBox.x - this.panelSidewaysMargin) : (this.panelSidewaysMargin - Main.layoutManager.panelBox.x);
         const panelIsAlreadyVeryHere = Main.layoutManager.panelBox.translation_x === theVeryEnd;
 
         if (invalidAnimationOverride || panelIsAlreadyVeryHere) return false;
