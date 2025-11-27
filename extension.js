@@ -70,7 +70,7 @@ export default class PanelPillExtension extends Extension {
     #settings = null;
 
     enable() {
-        global._panelpill = {};
+        global._panelpill = this;
         // this.enableClickToHideBehaviour();
         // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
