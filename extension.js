@@ -105,7 +105,7 @@ export default class PanelPillExtension extends Extension {
         if (this.#squareToggleListenerID !== null){
             this._settings.disconnect(this.#squareToggleListenerID);
         }
-        this.#squareToggleListenerID = this._settings.connect('changed::show-indicator', this.makePanelRound.bind(this));
+        this.#squareToggleListenerID = this._settings.connect('changed::square-corners', this.makePanelRound.bind(this));
     }
 
     isSquareCornersEnabled(){ 
