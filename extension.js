@@ -147,7 +147,7 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.width = new_width;
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with height = 0 the panel itself stays on the normal height.
-        Main.layoutManager.panelBox.height = 0;
+        Main.layoutManager.panelBox.height = this.panelHeight;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
         this.makePanelRound();
     }
