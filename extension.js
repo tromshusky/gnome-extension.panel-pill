@@ -89,6 +89,7 @@ export default class PanelPillExtension extends Extension {
         this.disableSquareToggleListener();
         this.resizeBackToVanilla();
         Main.panel.opacity = PANEL_OPACITY_MAX;
+        this.#settings = null;
     }
 
     get _settings() {
