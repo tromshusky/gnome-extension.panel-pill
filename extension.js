@@ -168,8 +168,10 @@ export default class PanelPillExtension extends Extension {
     }
 
     resizeBackToVanilla() {
+        Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
+        Main.layoutManager.panelBox.height = Main.panel.height;
         Main.panel.translation_y = 0;
         Main.panel.set_style("");
         Main.panel.get_children().map(c => c.set_style(""));
