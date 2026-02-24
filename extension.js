@@ -134,18 +134,21 @@ export default class PanelPillExtension extends Extension {
         this.#squareToggleListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
     }
 
-    refreshScaling() {
+    refreshSomeUI() {
         const new_width = this.isSettingTrue(SETTING_ISLANDS) ? global.screen_width : get_panel_width();
         const new_x = (global.screen_width - new_width) / 2;
         Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.width = new_width;
         Main.panel.reactive = !this.isSettingTrue(SETTING_ISLANDS);
+        
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
+        Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
     }
 
     onSettingChanged() {
         this.overviewClosingBehaviour();
-        this.refreshScaling();
+        this.refreshSomeUI();
         if (this.isSettingTrue(SETTING_OVERVIEW_HIDES)) {
             this.enableClickToHideBehaviour();
         } else {
@@ -158,13 +161,11 @@ export default class PanelPillExtension extends Extension {
     }
 
     resizeToPill() {
-        this.refreshScaling();
+        this.refreshSomeUI();
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with height = 0 the panel itself stays on the normal height.
         Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
-        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
-        Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
         this.makePanelRound();
     }
 
