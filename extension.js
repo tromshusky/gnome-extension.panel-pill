@@ -73,9 +73,9 @@ export default class PanelPillExtension extends Extension {
 
     enable() {
         global._panelpill = this;
-        
+
         this.enableClickToHideBehaviour();
-        
+
         // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
         this.enableOverviewOpeningBehaviour();
@@ -163,7 +163,8 @@ export default class PanelPillExtension extends Extension {
         // with height = 0 the panel itself stays on the normal height.
         Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
-        Main.panel.get_children().map(c => c.set_style("background-color: black; border-radius:" + Main.panel.height + "px;"));
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
+        Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
         this.makePanelRound();
     }
 
