@@ -33,9 +33,11 @@ const ANIMATION_RIGHTRIGHT = 3;
 const ANIMATION_DOWN = 4;
 const ANIMATION_UP = 5;
 
+const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
-const SETTING_WINDOW_GAP = "top-gap";
+const SETTING_WINDOW_GAP = "window-gap";
 const SETTING_SQUARE_CORNERS = "square-corners";
+const SETTING_OVERVIEW_HIDES = "hide-button";
 
 const set_panel_reactivity = (value) => {
     Main.panel.get_children().map(e => {
@@ -71,7 +73,9 @@ export default class PanelPillExtension extends Extension {
 
     enable() {
         global._panelpill = this;
-        // this.enableClickToHideBehaviour();
+        
+        this.enableClickToHideBehaviour();
+        
         // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
         this.enableOverviewOpeningBehaviour();
@@ -99,7 +103,7 @@ export default class PanelPillExtension extends Extension {
         return this.#settings;
     }
 
-    get panelHeight() {
+    get panelPlaceholderHeight() {
         return this.isSettingTrue(SETTING_WINDOW_GAP) ?
             WINDOW_GAP
             : 0;
@@ -130,9 +134,23 @@ export default class PanelPillExtension extends Extension {
         this.#squareToggleListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
     }
 
+    refreshScaling() {
+        const new_width = this.isSettingTrue(SETTING_ISLANDS) ? global.screen_width : get_panel_width();
+        const new_x = (global.screen_width - new_width) / 2;
+        Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
+        Main.layoutManager.panelBox.x = new_x;
+        Main.layoutManager.panelBox.width = new_width;
+        Main.panel.reactive = !this.isSettingTrue(SETTING_ISLANDS);
+    }
+
     onSettingChanged() {
         this.overviewClosingBehaviour();
-        Main.panel.translation_y = this.panelTopMargin;
+        this.refreshScaling();
+        if (this.isSettingTrue(SETTING_OVERVIEW_HIDES)) {
+            this.enableClickToHideBehaviour();
+        } else {
+            this.disableClickToHideBehaviour();
+        }
     }
 
     isSettingTrue(settingID) {
@@ -140,15 +158,12 @@ export default class PanelPillExtension extends Extension {
     }
 
     resizeToPill() {
-        const new_width = get_panel_width();
-        const new_x = (global.screen_width - new_width) / 2;
-        Main.panel.translation_y = this.panelTopMargin;
-        Main.layoutManager.panelBox.x = new_x;
-        Main.layoutManager.panelBox.width = new_width;
+        this.refreshScaling();
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with height = 0 the panel itself stays on the normal height.
-        Main.layoutManager.panelBox.height = this.panelHeight;
+        Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
+        Main.panel.get_children().map(c => c.set_style("background-color: black; border-radius:" + Main.panel.height + "px;"));
         this.makePanelRound();
     }
 
@@ -157,17 +172,15 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.width = global.screen_width;
         Main.panel.translation_y = 0;
         Main.panel.set_style("");
+        Main.panel.get_children().map(c => c.set_style(""));
     }
 
-
     makePanelRound() {
-        if (this.isSettingTrue(SETTING_SQUARE_CORNERS)) {
-            Main.panel.set_style("");
-            return;
-        }
-        const new_radius = Main.panel.height;
+        const style_islands = this.isSettingTrue(SETTING_ISLANDS) ? "background-color: transparent;" : "";
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
+
         const make_round = () => {
-            Main.panel.set_style("border-radius: " + new_radius + "px;");
+            Main.panel.set_style(style_islands + style_square);
         };
 
         make_round();
@@ -182,7 +195,9 @@ export default class PanelPillExtension extends Extension {
 
     overviewClosingBehaviour() {
         this.makePanelRound();
-        Main.layoutManager.panelBox.height = this.panelHeight;
+        Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
+        Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
+        Main.layoutManager.panelBox.height = this.panelPlaceholderHeight;
     }
 
     enableOverviewClosingBehaviour() {
@@ -201,6 +216,8 @@ export default class PanelPillExtension extends Extension {
     }
 
     overviewOpeningBehaviour() {
+        Main.panel.translation_y = this.panelTopMargin;
+        Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.height = Main.panel.height;
         // the following code would create a big enough margin above the search bar
         // but the "showing" connector does only react on opening the app grid
@@ -253,14 +270,14 @@ export default class PanelPillExtension extends Extension {
 
     enableClickToHideBehaviour() {
         if (this.#mainPanelClickListenerID1 != null)
-            Main.panel.disconnect(this.#mainPanelClickListenerID1);
-        this.#mainPanelClickListenerID1 = Main.panel.connect('button-press-event', this.clickToHideBehaviour.bind(this));
+            Main.panel.first_child.first_child.first_child.disconnect(this.#mainPanelClickListenerID1);
+        this.#mainPanelClickListenerID1 = Main.panel.first_child.first_child.first_child.connect('button-press-event', this.clickToHideBehaviour.bind(this));
     }
     disableClickToHideBehaviour() {
         this.resetReacticity();
 
         if (this.#mainPanelClickListenerID1 != null)
-            Main.panel.disconnect(this.#mainPanelClickListenerID1);
+            Main.panel.first_child.first_child.first_child.disconnect(this.#mainPanelClickListenerID1);
         this.#mainPanelClickListenerID1 = null;
 
         if (this.#timeoutVanishID != null)
@@ -363,7 +380,7 @@ export default class PanelPillExtension extends Extension {
     flickUp(dur, callb) {
 
         if (Main.layoutManager.panelBox.translation_y < 0) return false;
-        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.height;
+        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.translation_y - Main.panel.height;
         Main.layoutManager.panelBox.ease({
             translation_y: up_y,
             duration: dur,

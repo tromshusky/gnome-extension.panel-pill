@@ -6,8 +6,14 @@
     <key name="panel-gap" type="b">
       <default>true</default>
     </key>
-    <key name="top-gap" type="b">
-      <default>false</default>
+    <key name="window-gap" type="b">
+      <default>true</default>
+    </key>
+    <key name="islands" type="b">
+      <default>true</default>
+    </key>
+    <key name="hide-button" type="b">
+      <default>true</default>
     </key>
   </schema>
 </schemalist>

@@ -5,16 +5,20 @@ import Gtk from 'gi://Gtk';
 import { ExtensionPreferences, gettext } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 const _SQR_COR = "square-corners";
-const _WIN_GAP = "top-gap";
+const _WIN_GAP = "window-gap";
 const _PNL_GAP = "panel-gap";
+const _ISLANDS = "islands";
+const _HDE_BTN = "hide-button"
 
 const settings = {
     [_SQR_COR]: ["Square Corners", "Wether the panel should have square corners"],
-    [_WIN_GAP]: ["Top Gap", "Wether there should be a gap above windows.\n\nThis can fix some issues where the panel visually disappears behind windows, but still reacts to clicks (some XWayland apps for example)."],
+    [_WIN_GAP]: ["Window Gap", "Wether there should be a gap below maximized windows.\n\nThis can fix some issues where the panel visually disappears behind windows, but still reacts to clicks (some XWayland apps for example)."],
     [_PNL_GAP]: ["Panel Gap", "Wether the panel should be a bit lowered, making it 'floating'."],
+    [_ISLANDS]: ["Islands", "Wether the panel should be split into islands."],
+    [_HDE_BTN]: ["Hide Button", "Wether the overview button should instead hide the panel."],
 };
-const group1 = ["Appearance", "Configure the appearance of the panel", [_SQR_COR, _PNL_GAP]];
-const group2 = ["Other", "Other panel related settings.", [_WIN_GAP]];
+const group1 = ["Appearance", "Configure the appearance of the panel", [_SQR_COR, _PNL_GAP, _ISLANDS]];
+const group2 = ["Other", "Other panel related settings.", [_HDE_BTN, _WIN_GAP]];
 const page1 = ["General", "dialog-information-symbolic", [group1, group2]];
 const my_settings = [page1];
 
