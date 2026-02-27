@@ -15,7 +15,8 @@ const PANEL_OPACITY_HIGH = 191;
 const PANEL_OPACITY_MAX = 255;
 const PANEL_OPACITY_LOW = 100;
 const PANEL_RATIO = 20;
-const PANEL_GAP = 4;
+const PANEL_GAP = 18;
+const PANEL_HEIGHT = 40;
 const ROUND_CORNERS_DELAY = 300;
 const SCROLL_DIRECTION_DOWN = 0;
 const SCROLL_DIRECTION_LEFT = 3;
@@ -135,13 +136,14 @@ export default class PanelPillExtension extends Extension {
     }
 
     refreshSomeUI() {
-        const new_width = this.isSettingTrue(SETTING_ISLANDS) ? global.screen_width : get_panel_width();
+        const new_width = this.isSettingTrue(SETTING_ISLANDS) ? global.screen_width - 2 * this.panelTopMargin : get_panel_width();
         const new_x = (global.screen_width - new_width) / 2;
         Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.width = new_width;
+        Main.panel.height = PANEL_HEIGHT;
         Main.panel.reactive = !this.isSettingTrue(SETTING_ISLANDS);
-        
+
         const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
         Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
     }
@@ -222,7 +224,7 @@ export default class PanelPillExtension extends Extension {
     overviewOpeningBehaviour() {
         Main.panel.translation_y = this.panelTopMargin;
         Main.layoutManager.panelBox.y = 0;
-        Main.layoutManager.panelBox.height = Main.panel.height;
+        Main.layoutManager.panelBox.height = Main.panel.height + this.panelTopMargin;
         // the following code would create a big enough margin above the search bar
         // but the "showing" connector does only react on opening the app grid
         // Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
