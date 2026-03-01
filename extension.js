@@ -38,7 +38,7 @@ const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
 const SETTING_WINDOW_GAP = "window-gap";
 const SETTING_SQUARE_CORNERS = "square-corners";
-const SETTING_OVERVIEW_HIDES = "hide-button";
+const SETTING_HIDE_BUTTON = "hide-button";
 
 const set_panel_reactivity = (value) => {
     Main.panel.get_children().map(e => {
@@ -61,7 +61,7 @@ export default class PanelPillExtension extends Extension {
     #mainPanelClickListenerID1 = null;
     #windowManagerResizeListenerID1 = null;
     #mainPanelScrollListenerID1 = null;
-    #squareToggleListenerID = null;
+    #settingsListenerID = null;
 
     #timeoutVanishID = null;
     #timeoutFadeinID = null;
@@ -80,9 +80,8 @@ export default class PanelPillExtension extends Extension {
 
         // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
-        this.enableOverviewOpeningBehaviour();
         this.enableOverviewClosingBehaviour();
-        this.enableSquareToggleListener();
+        this.enableSettingsListener();
         this.resizeToPill();
     }
 
@@ -90,9 +89,8 @@ export default class PanelPillExtension extends Extension {
         this.disableClickToHideBehaviour();
         this.disableUndoMaximizeBehaviour();
         this.disableScrollBehaviour();
-        this.disableOverviewOpeningBehaviour();
         this.disableOverviewClosingBehaviour();
-        this.disableSquareToggleListener();
+        this.disableSettingsListener();
         this.resizeBackToVanilla();
         Main.panel.opacity = PANEL_OPACITY_MAX;
         this.#settings = null;
@@ -121,21 +119,15 @@ export default class PanelPillExtension extends Extension {
         return PANEL_GAP;
     }
 
-    disableSquareToggleListener() {
-        if (this.#squareToggleListenerID !== null) {
-            this._settings.disconnect(this.#squareToggleListenerID);
-        }
-        this.#squareToggleListenerID = null;
+    isSettingTrue(settingID) {
+        return this._settings.get_boolean(settingID);
     }
 
-    enableSquareToggleListener() {
-        if (this.#squareToggleListenerID !== null) {
-            this._settings.disconnect(this.#squareToggleListenerID);
-        }
-        this.#squareToggleListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
-    }
+    resizeToPill() {
+        const margin = this.panelTopMargin + Main.panel.height + this.panelTopMargin;
+        Main.overview._overview.first_child.first_child.style = "margin-top:" + margin + "px;"
 
-    refreshSomeUI() {
+
         const new_width = this.isSettingTrue(SETTING_ISLANDS) ? global.screen_width - 2 * this.panelTopMargin : get_panel_width();
         const new_x = (global.screen_width - new_width) / 2;
         Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
@@ -146,32 +138,17 @@ export default class PanelPillExtension extends Extension {
 
         const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
         Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
-    }
 
-    onSettingChanged() {
-        this.overviewClosingBehaviour();
-        this.refreshSomeUI();
-        if (this.isSettingTrue(SETTING_OVERVIEW_HIDES)) {
-            this.enableClickToHideBehaviour();
-        } else {
-            this.disableClickToHideBehaviour();
-        }
-    }
-
-    isSettingTrue(settingID) {
-        return this._settings.get_boolean(settingID);
-    }
-
-    resizeToPill() {
-        this.refreshSomeUI();
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with height = 0 the panel itself stays on the normal height.
         Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
         Main.panel.opacity = PANEL_OPACITY_HIGH;
-        this.makePanelRound();
+        this.setPanelStyle();
     }
 
     resizeBackToVanilla() {
+        Main.overview._overview.first_child.first_child.style = null;
+
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
@@ -181,73 +158,11 @@ export default class PanelPillExtension extends Extension {
         Main.panel.get_children().map(c => c.set_style(null));
     }
 
-    makePanelRound() {
+    setPanelStyle() {
         const style_islands = this.isSettingTrue(SETTING_ISLANDS) ? "background-color: transparent;" : "";
         const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
 
-        const make_round = () => {
-            Main.panel.set_style(style_islands + style_square);
-        };
-        // for some funny reason it only works with delay
-        if (this.#timeoutRoundnessID != null)
-            clearTimeout(this.#timeoutRoundnessID);
-        this.#timeoutRoundnessID = setTimeout(make_round, ROUND_CORNERS_DELAY);
-    }
-
-
-
-    overviewClosingBehaviour() {
-        this.makePanelRound();
-        
-        return;
-
-        Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
-        Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
-        Main.layoutManager.panelBox.height = this.panelPlaceholderHeight;
-    }
-
-    enableOverviewClosingBehaviour() {
-        if (this.#mainOverviewListenerID2 != null)
-            Main.overview.disconnect(this.#mainOverviewListenerID2);
-        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', this.overviewClosingBehaviour.bind(this));
-    }
-
-    disableOverviewClosingBehaviour() {
-        if (this.#mainOverviewListenerID2 != null)
-            Main.overview.disconnect(this.#mainOverviewListenerID2);
-        this.#mainOverviewListenerID2 = null;
-        if (this.#timeoutRoundnessID != null)
-            clearTimeout(this.#timeoutRoundnessID);
-        this.#timeoutRoundnessID = null;
-    }
-
-    overviewOpeningBehaviour() {
-        Main.panel.translation_y = this.panelTopMargin;
-        Main.layoutManager.panelBox.y = 0;
-        Main.layoutManager.panelBox.height = Main.panel.height + this.panelTopMargin;
-    }
-
-    enableOverviewOpeningBehaviour() {
-        
-        const margin = this.panelTopMargin + Main.panel.height + this.panelTopMargin;
-        Main.overview._overview.first_child.first_child.style = "margin-top:" + margin + "px;"
-
-        return;
-
-        if (this.#mainOverviewListenerID1 != null)
-            Main.overview.disconnect(this.#mainOverviewListenerID1);
-        this.#mainOverviewListenerID1 = Main.overview.connect('showing', this.overviewOpeningBehaviour.bind(this));
-    }
-
-    disableOverviewOpeningBehaviour() {
-
-        Main.overview._overview.first_child.first_child.style = null;
-
-        return;
-
-        if (this.#mainOverviewListenerID1 != null)
-            Main.overview.disconnect(this.#mainOverviewListenerID1);
-        this.#mainOverviewListenerID1 = null;
+        Main.panel.set_style(style_islands + style_square);
     }
 
     temporarySetReactivityFalse(duration) {
@@ -276,6 +191,53 @@ export default class PanelPillExtension extends Extension {
         Main.panel.opacity = PANEL_OPACITY_HIGH;
     }
 
+    // EVENT TRIGGERED LOGIC
+
+    disableSettingsListener() {
+        if (this.#settingsListenerID !== null) {
+            this._settings.disconnect(this.#settingsListenerID);
+        }
+        this.#settingsListenerID = null;
+    }
+
+    enableSettingsListener() {
+        if (this.#settingsListenerID !== null) {
+            this._settings.disconnect(this.#settingsListenerID);
+        }
+        this.#settingsListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
+    }
+
+    onSettingChanged() {
+        this.resizeToPill();
+        if (this.isSettingTrue(SETTING_HIDE_BUTTON)) {
+            this.enableClickToHideBehaviour();
+        } else {
+            this.disableClickToHideBehaviour();
+        }
+    }
+
+    overviewClosingBehaviour() {
+        // for some funny reason it only works with delay
+        if (this.#timeoutRoundnessID != null)
+            clearTimeout(this.#timeoutRoundnessID);
+        this.#timeoutRoundnessID = setTimeout(this.setPanelStyle.bind(this), ROUND_CORNERS_DELAY);
+
+    }
+
+    enableOverviewClosingBehaviour() {
+        if (this.#mainOverviewListenerID2 != null)
+            Main.overview.disconnect(this.#mainOverviewListenerID2);
+        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', this.overviewClosingBehaviour.bind(this));
+    }
+
+    disableOverviewClosingBehaviour() {
+        if (this.#mainOverviewListenerID2 != null)
+            Main.overview.disconnect(this.#mainOverviewListenerID2);
+        this.#mainOverviewListenerID2 = null;
+        if (this.#timeoutRoundnessID != null)
+            clearTimeout(this.#timeoutRoundnessID);
+        this.#timeoutRoundnessID = null;
+    }
 
     clickToHideBehaviour() {
         Main.panel.hide();
@@ -297,6 +259,7 @@ export default class PanelPillExtension extends Extension {
             Main.panel.first_child.first_child.first_child.disconnect(this.#mainPanelClickListenerID1);
         this.#mainPanelClickListenerID1 = Main.panel.first_child.first_child.first_child.connect('button-press-event', this.clickToHideBehaviour.bind(this));
     }
+
     disableClickToHideBehaviour() {
         this.resetReacticity();
 
