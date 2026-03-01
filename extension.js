@@ -65,6 +65,7 @@ export default class PanelPillExtension extends Extension {
 
     #timeoutVanishID = null;
     #timeoutFadeinID = null;
+    #timeoutFadeInStartEffectID = null;
     #timeoutRoundnessID = null;
     #timeoutStretchID = null;
 
@@ -131,7 +132,6 @@ export default class PanelPillExtension extends Extension {
         if (this.#squareToggleListenerID !== null) {
             this._settings.disconnect(this.#squareToggleListenerID);
         }
-        // this.#squareToggleListenerID = this._settings.connect(`changed::${SETTING_SQUARE_CORNERS}`, this.makePanelRound.bind(this));
         this.#squareToggleListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
     }
 
@@ -177,8 +177,8 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.width = global.screen_width;
         Main.layoutManager.panelBox.height = Main.panel.height;
         Main.panel.translation_y = 0;
-        Main.panel.set_style("");
-        Main.panel.get_children().map(c => c.set_style(""));
+        Main.panel.set_style(null);
+        Main.panel.get_children().map(c => c.set_style(null));
     }
 
     makePanelRound() {
@@ -188,10 +188,7 @@ export default class PanelPillExtension extends Extension {
         const make_round = () => {
             Main.panel.set_style(style_islands + style_square);
         };
-
-        make_round();
-
-        // for some funny reason its better to repeat after a delay
+        // for some funny reason it only works with delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
         this.#timeoutRoundnessID = setTimeout(make_round, ROUND_CORNERS_DELAY);
@@ -201,6 +198,9 @@ export default class PanelPillExtension extends Extension {
 
     overviewClosingBehaviour() {
         this.makePanelRound();
+        
+        return;
+
         Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
         Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
         Main.layoutManager.panelBox.height = this.panelPlaceholderHeight;
@@ -225,18 +225,26 @@ export default class PanelPillExtension extends Extension {
         Main.panel.translation_y = this.panelTopMargin;
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.height = Main.panel.height + this.panelTopMargin;
-        // the following code would create a big enough margin above the search bar
-        // but the "showing" connector does only react on opening the app grid
-        // Main.overview._overview.first_child.first_child.margin_top = PANEL_Y + Main.panel.height + PANEL_Y;
     }
 
     enableOverviewOpeningBehaviour() {
+        
+        const margin = this.panelTopMargin + Main.panel.height + this.panelTopMargin;
+        Main.overview._overview.first_child.first_child.style = "margin-top:" + margin + "px;"
+
+        return;
+
         if (this.#mainOverviewListenerID1 != null)
             Main.overview.disconnect(this.#mainOverviewListenerID1);
         this.#mainOverviewListenerID1 = Main.overview.connect('showing', this.overviewOpeningBehaviour.bind(this));
     }
 
     disableOverviewOpeningBehaviour() {
+
+        Main.overview._overview.first_child.first_child.style = null;
+
+        return;
+
         if (this.#mainOverviewListenerID1 != null)
             Main.overview.disconnect(this.#mainOverviewListenerID1);
         this.#mainOverviewListenerID1 = null;
@@ -244,16 +252,26 @@ export default class PanelPillExtension extends Extension {
 
     temporarySetReactivityFalse(duration) {
         set_panel_reactivity(false);
-        Main.panel.opacity = PANEL_OPACITY_LOW;
+        Main.panel.opacity = 0;
         if (this.#timeoutFadeinID != null)
             clearTimeout(this.#timeoutFadeinID);
+        if (this.#timeoutFadeInStartEffectID)
+            clearTimeout(this.#timeoutFadeInStartEffectID);
         this.#timeoutFadeinID = setTimeout(this.resetReacticity.bind(this), duration);
+        this.#timeoutFadeInStartEffectID = setTimeout(this.fadeInEffect.bind(this), duration - DURATION_FADEIN);
+    }
+
+    fadeInEffect() {
+        Main.panel.ease({ opacity: PANEL_OPACITY_LOW, duration: DURATION_FADEIN, mode: Clutter.AnimationMode.EASE_IN_QUAD });
     }
 
     resetReacticity() {
         if (this.#timeoutFadeinID)
             clearTimeout(this.#timeoutFadeinID);
+        if (this.#timeoutFadeInStartEffectID)
+            clearTimeout(this.#timeoutFadeInStartEffectID);
         this.#timeoutFadeinID = null;
+        this.#timeoutFadeInStartEffectID = null;
         set_panel_reactivity(true);
         Main.panel.opacity = PANEL_OPACITY_HIGH;
     }
