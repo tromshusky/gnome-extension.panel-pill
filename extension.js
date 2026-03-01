@@ -1,6 +1,7 @@
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
 import Clutter from "gi://Clutter";
+import Gio from 'gi://Gio';
 
 // import Shell from "gi://Shell";
 // import St from "gi://St";
@@ -62,6 +63,7 @@ export default class PanelPillExtension extends Extension {
     #windowManagerResizeListenerID1 = null;
     #mainPanelScrollListenerID1 = null;
     #settingsListenerID = null;
+    #hoverListenerElemsAndIDs = [];
 
     #timeoutVanishID = null;
     #timeoutFadeinID = null;
@@ -73,6 +75,8 @@ export default class PanelPillExtension extends Extension {
 
     #settings = null;
 
+
+
     enable() {
         global._panelpill = this;
 
@@ -82,6 +86,7 @@ export default class PanelPillExtension extends Extension {
         this.enableScrollBehaviour();
         this.enableOverviewClosingBehaviour();
         this.enableSettingsListener();
+        this.enableHoverListeners();
         this.resizeToPill();
     }
 
@@ -91,6 +96,7 @@ export default class PanelPillExtension extends Extension {
         this.disableScrollBehaviour();
         this.disableOverviewClosingBehaviour();
         this.disableSettingsListener();
+        this.disableHoverListeners();
         this.resizeBackToVanilla();
         Main.panel.opacity = PANEL_OPACITY_MAX;
         this.#settings = null;
@@ -118,6 +124,26 @@ export default class PanelPillExtension extends Extension {
     get panelSidewaysMargin() {
         return PANEL_GAP;
     }
+
+    get darkAccentColor() {
+        const settings = new Gio.Settings({ schema: 'org.gnome.desktop.interface' });
+        const gnomeColor = settings.get_string('accent-color');
+
+        const colorMap = {
+            blue: 'DarkBlue',
+            teal: 'DarkCyan',
+            green: 'DarkGreen',
+            yellow: 'DarkGoldenRod',
+            orange: 'DarkOrange',
+            red: 'DarkRed',
+            pink: 'DeepPink',
+            purple: 'DarkMagenta',
+            slate: 'DarkSlateGray'
+        };
+
+        return colorMap[gnomeColor] || colorMap.slate;
+    }
+
 
     isSettingTrue(settingID) {
         return this._settings.get_boolean(settingID);
@@ -192,6 +218,33 @@ export default class PanelPillExtension extends Extension {
     }
 
     // EVENT TRIGGERED LOGIC
+
+    enableHoverListeners() {
+        Main.panel.
+            get_children().
+            flatMap(c => c.get_children().map(c => c.first_child)).
+            map(elem => {
+                this.#hoverListenerElemsAndIDs.push([
+                    elem,
+                    elem.connect("enter-event", () => {
+                        const styleLine = "box-shadow:0 0 8px 8px " + this.darkAccentColor + ";";
+                        elem.get_parent().get_parent().style = (elem.get_parent().get_parent().style ?? "") + styleLine;
+                    })
+                ])
+                this.#hoverListenerElemsAndIDs.push([
+                    elem,
+                    elem.connect("leave-event", () => {
+                        elem.get_parent().get_parent().style = elem.get_parent().get_parent().style?.replace(/box-shadow:[^;]*;?/g, "");
+                    })
+                ])
+            });
+    }
+
+    disableHoverListeners() {
+        this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem.get_parent().get_parent().style = null);
+        this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem?.disconnect(id));
+        this.#hoverListenerElemsAndIDs = [];
+    }
 
     disableSettingsListener() {
         if (this.#settingsListenerID !== null) {
