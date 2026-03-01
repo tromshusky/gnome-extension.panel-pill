@@ -229,7 +229,6 @@ export default class PanelPillExtension extends Extension {
                     elem.connect("enter-event", () => {
                         const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + ";";
                         elem.style = (elem.style ?? "") + styleLine;
-                        elem.remove_style_pseudo_class("hover");
                     })
                 ])
                 this.#hoverListenerElemsAndIDs.push([
@@ -295,6 +294,8 @@ export default class PanelPillExtension extends Extension {
 
     clickToHideBehaviour() {
         Main.panel.hide();
+        // when hidden, there is no leave-event trigger
+        Main.panel.first_child.first_child.first_child.style = "";
 
         if (this.#timeoutVanishID != null)
             clearTimeout(this.#timeoutVanishID);
