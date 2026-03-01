@@ -227,21 +227,22 @@ export default class PanelPillExtension extends Extension {
                 this.#hoverListenerElemsAndIDs.push([
                     elem,
                     elem.connect("enter-event", () => {
-                        const styleLine = "box-shadow:0 0 8px 8px " + this.darkAccentColor + ";";
-                        elem.get_parent().get_parent().style = (elem.get_parent().get_parent().style ?? "") + styleLine;
+                        const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + ";";
+                        elem.style = (elem.style ?? "") + styleLine;
+                        elem.remove_style_pseudo_class("hover");
                     })
                 ])
                 this.#hoverListenerElemsAndIDs.push([
                     elem,
                     elem.connect("leave-event", () => {
-                        elem.get_parent().get_parent().style = elem.get_parent().get_parent().style?.replace(/box-shadow:[^;]*;?/g, "");
+                        elem.style = elem.style?.replace(/box-shadow:[^;]*;?/g, "");
                     })
                 ])
             });
     }
 
     disableHoverListeners() {
-        this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem.get_parent().get_parent().style = null);
+        this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem.style = null);
         this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem?.disconnect(id));
         this.#hoverListenerElemsAndIDs = [];
     }
