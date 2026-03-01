@@ -204,6 +204,7 @@ export default class PanelPillExtension extends Extension {
 
     fadeInEffect() {
         Main.panel.ease({ opacity: PANEL_OPACITY_LOW, duration: DURATION_FADEIN, mode: Clutter.AnimationMode.EASE_IN_QUAD });
+        Main.panel.first_child.first_child.first_child.remove_style_pseudo_class("hover");
     }
 
     resetReacticity() {
@@ -296,7 +297,7 @@ export default class PanelPillExtension extends Extension {
         Main.panel.hide();
         // when hidden, there is no leave-event trigger
         Main.panel.first_child.first_child.first_child.style = "";
-
+        
         if (this.#timeoutVanishID != null)
             clearTimeout(this.#timeoutVanishID);
 
