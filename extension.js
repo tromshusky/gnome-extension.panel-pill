@@ -73,15 +73,18 @@ export default class PanelPillExtension extends Extension {
 
     #ongoingAnimation = ANIMATION_NONE;
 
-    #settings = null;
-
-
+    /**
+     * @returns {Console} A logger supporting log(), warn(), error(), info(), debug(), assert(), trace(), group(), groupEnd()
+     */
+    get logger() {
+        return this.getLogger();
+    }
 
     enable() {
         global._panelpill = this;
 
         this.enableClickToHideBehaviour();
-
+        
         // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
         this.enableOverviewClosingBehaviour();
@@ -99,14 +102,10 @@ export default class PanelPillExtension extends Extension {
         this.disableHoverListeners();
         this.resizeBackToVanilla();
         Main.panel.opacity = PANEL_OPACITY_MAX;
-        this.#settings = null;
     }
 
-    get _settings() {
-        if (this.#settings === null) {
-            this.#settings = this.getSettings();
-        }
-        return this.#settings;
+    get settings() {
+        return this.getSettings();
     }
 
     get panelPlaceholderHeight() {
@@ -126,8 +125,8 @@ export default class PanelPillExtension extends Extension {
     }
 
     get darkAccentColor() {
-        const settings = new Gio.Settings({ schema: 'org.gnome.desktop.interface' });
-        const gnomeColor = settings.get_string('accent-color');
+        const interfaceSettings = new Gio.Settings({ schema: 'org.gnome.desktop.interface' });
+        const gnomeColor = interfaceSettings.get_string('accent-color');
 
         const colorMap = {
             blue: 'DarkBlue',
@@ -146,7 +145,7 @@ export default class PanelPillExtension extends Extension {
 
 
     isSettingTrue(settingID) {
-        return this._settings.get_boolean(settingID);
+        return this.settings.get_boolean(settingID);
     }
 
     resizeToPill() {
@@ -249,16 +248,16 @@ export default class PanelPillExtension extends Extension {
 
     disableSettingsListener() {
         if (this.#settingsListenerID !== null) {
-            this._settings.disconnect(this.#settingsListenerID);
+            this.settings.disconnect(this.#settingsListenerID);
         }
         this.#settingsListenerID = null;
     }
 
     enableSettingsListener() {
         if (this.#settingsListenerID !== null) {
-            this._settings.disconnect(this.#settingsListenerID);
+            this.settings.disconnect(this.#settingsListenerID);
         }
-        this.#settingsListenerID = this._settings.connect("changed", this.onSettingChanged.bind(this));
+        this.#settingsListenerID = this.settings.connect("changed", this.onSettingChanged.bind(this));
     }
 
     onSettingChanged() {
@@ -297,7 +296,7 @@ export default class PanelPillExtension extends Extension {
         Main.panel.hide();
         // when hidden, there is no leave-event trigger
         Main.panel.first_child.first_child.first_child.style = "";
-        
+
         if (this.#timeoutVanishID != null)
             clearTimeout(this.#timeoutVanishID);
 
