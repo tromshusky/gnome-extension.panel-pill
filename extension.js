@@ -4,7 +4,7 @@ import Clutter from "gi://Clutter";
 import Gio from 'gi://Gio';
 
 // import Shell from "gi://Shell";
-// import St from "gi://St";
+import St from "gi://St";
 
 const DURATION_ASIDE = 7000;
 const DURATION_ASIDE_VERYLONG = 1000000;
@@ -35,6 +35,8 @@ const ANIMATION_RIGHTRIGHT = 3;
 const ANIMATION_DOWN = 4;
 const ANIMATION_UP = 5;
 
+const UNIQUE_DASH_WRAPPER_NAME = "panelpilldashwrappingbox";
+
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
 const SETTING_WINDOW_GAP = "window-gap";
@@ -64,6 +66,8 @@ export default class PanelPillExtension extends Extension {
     #mainPanelScrollListenerID1 = null;
     #settingsListenerID = null;
     #hoverListenerElemsAndIDs = [];
+    #appButtonClickListernerElemAndID = [];
+    #hoverDockListenerAndID = [];
 
     #timeoutVanishID = null;
     #timeoutFadeinID = null;
@@ -84,12 +88,12 @@ export default class PanelPillExtension extends Extension {
         global._panelpill = this;
 
         this.enableClickToHideBehaviour();
-        
+
         // this.enableUndoMaximizeBehaviour();
         this.enableScrollBehaviour();
         this.enableOverviewClosingBehaviour();
         this.enableSettingsListener();
-        this.enableHoverListeners();
+        this.enablePanelHoverColorListeners();
         this.resizeToPill();
     }
 
@@ -217,9 +221,85 @@ export default class PanelPillExtension extends Extension {
         Main.panel.opacity = PANEL_OPACITY_HIGH;
     }
 
+    dockify() {
+        const dash = Main.overview._overview.first_child.get_children().find(c => c.name === "dash") || Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child;
+        const box = new St.BoxLayout({ name: UNIQUE_DASH_WRAPPER_NAME });
+        box.height = global.screen_height;
+        box.width = global.screen_width;
+        dash.get_parent().remove_child(dash);
+        Main.uiGroup.add_child(box);
+        box.add_child(dash);
+        dash.x_align = Clutter.ActorAlign.CENTER;
+        dash.x_expand = true;
+        dash.y_align = Clutter.ActorAlign.END;
+    }
+
+    undockify() {
+        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        dash.get_parent().remove_child(dash);
+        Main.overview._overview.add_child(dash);
+    }
+
+    hideDock() {
+        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        dash.ease({
+            translation_y: 100,
+            duration: DURATION_FLICK,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK
+        });
+    }
+
+    showDock() {
+        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        dash.ease({
+            translation_y: 0,
+            duration: DURATION_FLICK,
+            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK
+        });
+    }
+
     // EVENT TRIGGERED LOGIC
 
-    enableHoverListeners() {
+    enableDockHoverListener() {
+        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        this.#hoverDockListenerAndID.push([
+            dash,
+            dash.connect("enter-event", () => {
+                const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + ";";
+                elem.style = (elem.style ?? "") + styleLine;
+                this.showDock();
+            })
+        ]);
+        this.#hoverDockListenerAndID.push([
+            dash,
+            dash.connect("leave-event", () => {
+                elem.style = elem.style?.replace(/box-shadow:[^;]*;?/g, "");
+                this.hideDock();
+            })
+        ]);
+    }
+
+
+    disableDockHoverListener() {
+        this.#hoverDockListenerAndID.map(([elem, id]) => elem?.disconnect(id));
+        this.#hoverDockListenerAndID = [];
+    }
+
+    enableShowAppButton() {
+        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        this.#appButtonClickListernerElemAndID.map(([elem, id]) => elem?.disconnect(id));
+        this.#appButtonClickListernerElemAndID = [];
+        const elem = dash.last_child.last_child.first_child;
+        id = elem.connect('button-press-event', () => Main.overview.show());
+        this.#appButtonClickListernerElemAndID.push([elem, id]);
+    }
+
+    disableShowAppButton() {
+        this.#appButtonClickListernerElemAndID.map(([elem, id]) => elem?.disconnect(id));
+        this.#appButtonClickListernerElemAndID = [];
+    }
+
+    enablePanelHoverColorListeners() {
         Main.panel.
             get_children().
             flatMap(c => c.get_children().map(c => c.first_child)).
