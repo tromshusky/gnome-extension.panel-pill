@@ -78,6 +78,8 @@ export default class PanelPillExtension extends Extension {
 
     #ongoingAnimation = ANIMATION_NONE;
 
+    #settings = null; // protect it from the gc, so the .connect stays alive
+
     /**
      * @returns {Console} A logger supporting log(), warn(), error(), info(), debug(), assert(), trace(), group(), groupEnd()
      */
@@ -117,6 +119,7 @@ export default class PanelPillExtension extends Extension {
         this.resizeBackToVanilla();
 
         Main.panel.opacity = OPACITY_MAX;
+        this.#settings = null;
     }
 
     enable() {
@@ -126,8 +129,13 @@ export default class PanelPillExtension extends Extension {
             if (this.#startupListenerID) {
                 Main.layoutManager.disconnect(this.#startupListenerID);
             }
-            this.#startupListenerID = Main.layoutManager.connect('startup-complete', () => this.enable1());
+            this.#startupListenerID = Main.layoutManager.connect('startup-complete', () => {
+                Main.layoutManager.disconnect(this.#startupListenerID);
+                this.#startupListenerID = null;
+                this.enable1();
+            });
         }
+
     }
 
     disable() {
@@ -140,7 +148,10 @@ export default class PanelPillExtension extends Extension {
 
 
     get settings() {
-        return this.getSettings();
+        if (this.#settings === null) {
+            this.#settings = this.getSettings();
+        }
+        return this.#settings;
     }
 
     get panelPlaceholderHeight() {
@@ -220,7 +231,7 @@ export default class PanelPillExtension extends Extension {
 
     setPanelStyle() {
         const style_islands = this.isSettingTrue(SETTING_ISLANDS) ? "background-color: transparent;" : "";
-        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height} px;`;
 
         Main.panel.set_style(style_islands + style_square);
     }
@@ -232,8 +243,8 @@ export default class PanelPillExtension extends Extension {
             clearTimeout(this.#timeoutFadeinID);
         if (this.#timeoutFadeInStartEffectID)
             clearTimeout(this.#timeoutFadeInStartEffectID);
-        this.#timeoutFadeinID = setTimeout(this.resetReacticity.bind(this), duration);
-        this.#timeoutFadeInStartEffectID = setTimeout(this.fadeInEffect.bind(this), duration - DURATION_FADEIN);
+        this.#timeoutFadeinID = setTimeout(() => this.resetReactivity(), duration);
+        this.#timeoutFadeInStartEffectID = setTimeout(() => this.fadeInEffect(), duration - DURATION_FADEIN);
     }
 
     fadeInEffect() {
@@ -241,7 +252,7 @@ export default class PanelPillExtension extends Extension {
         Main.panel.first_child.first_child.first_child.remove_style_pseudo_class("hover");
     }
 
-    resetReacticity() {
+    resetReactivity() {
         if (this.#timeoutFadeinID)
             clearTimeout(this.#timeoutFadeinID);
         if (this.#timeoutFadeInStartEffectID)
@@ -266,16 +277,13 @@ export default class PanelPillExtension extends Extension {
         Main.overview.dash.x_align = Clutter.ActorAlign.CENTER;
         Main.overview.dash.x_expand = true;
         Main.overview.dash.y_align = Clutter.ActorAlign.END;
-        Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
-        Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_LOW);
+        this.setColoredDashStyle();
     }
 
     undockify() {
         Main.overview.dash.get_parent().remove_child(Main.overview.dash);
         Main.overview._overview.add_child(Main.overview.dash);
-        Main.overview.dash.set_style(null);
-        Main.overview.dash.first_child.set_style(null);
-        Main.overview.dash.first_child.set_opacity(OPACITY_MAX);
+        this.resetDashStyle();
     }
 
     hideDock() {
@@ -298,6 +306,19 @@ export default class PanelPillExtension extends Extension {
         Main.overview.dash.translation_y = 0;
     }
 
+    resetDashStyle() {
+        Main.overview.dash.set_style(null);
+        Main.overview.dash.first_child.set_style(null);
+        Main.overview.dash.first_child.set_opacity(OPACITY_MAX);
+    }
+
+    setColoredDashStyle() {
+        const shadowStyle = `box-shadow:0 0 ${Main.overview.dash.height / 8}px -${Main.overview.dash.height / 32}px ${this.darkAccentColor};`;
+        const radiusStyle = `border-radius:${Main.overview.dash.height / 4};`;
+        Main.overview.dash.set_style(shadowStyle + radiusStyle);
+        Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
+    }
+
     // EVENT TRIGGERED LOGIC
 
     enableDockHoverListener() {
@@ -307,15 +328,12 @@ export default class PanelPillExtension extends Extension {
             Main.overview.dash.connect("enter-event", () => {
                 this.showDock();
                 if (Main.overview.visible) return;
-                const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + "; border-radius:99;";
                 Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_HIGH);
-                Main.overview.dash.set_style(styleLine);
             })
         ]);
         this.#hoverDockListenerAndID.push([
             Main.overview.dash,
             Main.overview.dash.connect("leave-event", () => {
-                Main.overview.dash.set_style(null);
                 Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_LOW);
                 if (!Main.overview.visible) {
                     this.hideDock();
@@ -400,7 +418,7 @@ export default class PanelPillExtension extends Extension {
         if (this.#settingsListenerID !== null) {
             this.settings.disconnect(this.#settingsListenerID);
         }
-        this.#settingsListenerID = this.settings.connect("changed", this.onSettingChanged.bind(this));
+        this.#settingsListenerID = this.settings.connect("changed", () => this.onSettingChanged());
     }
 
     onSettingChanged() {
@@ -424,12 +442,13 @@ export default class PanelPillExtension extends Extension {
     overviewShowingBehaviour() {
         if (this.isSettingTrue(SETTING_EASY_DOCK)) {
             this.showDock();
+            this.resetDashStyle();
         }
     }
     enableOverviewShowingBehaviour() {
         if (this.#mainOverviewListenerID1 != null)
             Main.overview.disconnect(this.#mainOverviewListenerID1);
-        this.#mainOverviewListenerID1 = Main.overview.connect('showing', this.overviewShowingBehaviour.bind(this));
+        this.#mainOverviewListenerID1 = Main.overview.connect('showing', () => this.overviewShowingBehaviour());
     }
 
     disableOverviewShowingBehaviour() {
@@ -443,16 +462,17 @@ export default class PanelPillExtension extends Extension {
         // for some funny reason it only works with delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
-        this.#timeoutRoundnessID = setTimeout(this.setPanelStyle.bind(this), ROUND_CORNERS_DELAY);
+        this.#timeoutRoundnessID = setTimeout(() => this.setPanelStyle(), ROUND_CORNERS_DELAY);
         if (this.isSettingTrue(SETTING_EASY_DOCK)) {
             this.hideDock();
+            this.setColoredDashStyle();
         }
     }
 
     enableOverviewClosingBehaviour() {
         if (this.#mainOverviewListenerID2 != null)
             Main.overview.disconnect(this.#mainOverviewListenerID2);
-        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', this.overviewClosingBehaviour.bind(this));
+        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', () => this.overviewClosingBehaviour());
     }
 
     disableOverviewClosingBehaviour() {
@@ -484,11 +504,11 @@ export default class PanelPillExtension extends Extension {
     enableClickToHideBehaviour() {
         if (this.#mainPanelClickListenerID1 != null)
             Main.panel.first_child.first_child.first_child.disconnect(this.#mainPanelClickListenerID1);
-        this.#mainPanelClickListenerID1 = Main.panel.first_child.first_child.first_child.connect('button-press-event', this.clickToHideBehaviour.bind(this));
+        this.#mainPanelClickListenerID1 = Main.panel.first_child.first_child.first_child.connect('button-press-event', () => this.clickToHideBehaviour());
     }
 
     disableClickToHideBehaviour() {
-        this.resetReacticity();
+        this.resetReactivity();
 
         if (this.#mainPanelClickListenerID1 != null)
             Main.panel.first_child.first_child.first_child.disconnect(this.#mainPanelClickListenerID1);
@@ -498,7 +518,7 @@ export default class PanelPillExtension extends Extension {
             clearTimeout(this.#timeoutVanishID);
         this.#timeoutVanishID = null;
 
-        this.resetReacticity();
+        this.resetReactivity();
     }
 
     undoMaximizeBehaviour(wm, win) {
@@ -516,7 +536,7 @@ export default class PanelPillExtension extends Extension {
     enableUndoMaximizeBehaviour() {
         if (this.#windowManagerResizeListenerID1 != null)
             global.window_manager.disconnect(this.#windowManagerResizeListenerID1);
-        this.#windowManagerResizeListenerID1 = global.window_manager.connect_after('size-change', this.undoMaximizeBehaviour.bind(this));
+        this.#windowManagerResizeListenerID1 = global.window_manager.connect_after('size-change', () => this.undoMaximizeBehaviour());
     }
 
     disableUndoMaximizeBehaviour() {
@@ -643,7 +663,7 @@ export default class PanelPillExtension extends Extension {
     enableScrollBehaviour() {
         if (this.#mainPanelScrollListenerID1 != null)
             Main.panel.disconnect(this.#mainPanelScrollListenerID1);
-        this.#mainPanelScrollListenerID1 = Main.panel.connect('scroll-event', this.scrollBehaviour.bind(this))
+        this.#mainPanelScrollListenerID1 = Main.panel.connect('scroll-event', () => this.scrollBehaviour())
     }
 
     disableScrollBehaviour() {
