@@ -275,11 +275,6 @@ export default class PanelPillExtension extends Extension {
     // EVENT TRIGGERED LOGIC
 
     enableDockHoverListener() {
-        return;
-        this.enableDockHoverListener3();
-    }
-
-    enableDockHoverListener3() {
         Main.overview.dash.set_reactive(true);
         this.#hoverDockListenerAndID.push([
             Main.overview.dash,
