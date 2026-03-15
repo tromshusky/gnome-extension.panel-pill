@@ -99,7 +99,7 @@ export default class PanelPillExtension extends Extension {
         // this.resizeToPill(); // part of this.onSettingChanged();
         // this.enableClickToHideBehaviour(); // part of this.onSettingChanged();
         // this.enableDockHoverListener(); // part of this.onSettingChanged();
-
+        // this.dockify(); // part of this.onSettingChanged();
         this.onSettingChanged();
     }
 
@@ -121,7 +121,7 @@ export default class PanelPillExtension extends Extension {
 
     enable() {
         if (Main.layoutManager._startingUp === false) {
-            this.dockify();
+            this.enable1();
         } else {
             if (this.#startupListenerID) {
                 Main.layoutManager.disconnect(this.#startupListenerID);
