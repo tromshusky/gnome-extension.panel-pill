@@ -8,7 +8,8 @@ const _SQR_COR = "square-corners";
 const _WIN_GAP = "window-gap";
 const _PNL_GAP = "panel-gap";
 const _ISLANDS = "islands";
-const _HDE_BTN = "hide-button"
+const _HDE_BTN = "hide-button";
+const _EZ_DOCK = "easy-dock";
 
 const settings = {
     [_SQR_COR]: ["Square Corners", "Wether the panel should have square corners"],
@@ -16,10 +17,12 @@ const settings = {
     [_PNL_GAP]: ["Panel Gap", "Wether the panel should be a bit lowered, making it 'floating'."],
     [_ISLANDS]: ["Islands", "Wether the panel should be split into islands."],
     [_HDE_BTN]: ["Hide Button", "Wether the overview button should instead hide the panel."],
+    [_EZ_DOCK]: ["Easy Dock", "Wether the dock should be shown on the desktop."],
 };
 const group1 = ["Appearance", "Configure the appearance of the panel", [_SQR_COR, _PNL_GAP, _ISLANDS]];
 const group2 = ["Other", "Other panel related settings.", [_HDE_BTN, _WIN_GAP]];
-const page1 = ["General", "dialog-information-symbolic", [group1, group2]];
+const group3 = ["Dock", "Dock Settings", [_EZ_DOCK]];
+const page1 = ["General", "dialog-information-symbolic", [group1, group2, group3]];
 const my_settings = [page1];
 
 export default class ExamplePreferences extends ExtensionPreferences {
@@ -52,7 +55,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
             resetGroup.add(resetRow);
             page.add(resetGroup);
             return page;
-            
+
         };
 
         const createGroup = ([title, description, rows]) => {

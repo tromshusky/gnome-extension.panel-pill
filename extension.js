@@ -35,13 +35,14 @@ const ANIMATION_RIGHTRIGHT = 3;
 const ANIMATION_DOWN = 4;
 const ANIMATION_UP = 5;
 
-const UNIQUE_DASH_WRAPPER_NAME = "panelpilldashwrappingbox";
+// const UNIQUE_DASH_WRAPPER_NAME = "panelpilldashwrappingbox";
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
 const SETTING_WINDOW_GAP = "window-gap";
 const SETTING_SQUARE_CORNERS = "square-corners";
 const SETTING_HIDE_BUTTON = "hide-button";
+const SETTING_EASY_DOCK = "easy-dock";
 
 const set_panel_reactivity = (value) => {
     Main.panel.get_children().map(e => {
@@ -87,14 +88,18 @@ export default class PanelPillExtension extends Extension {
     enable() {
         global._panelpill = this;
 
-        this.enableClickToHideBehaviour();
 
-        // this.enableUndoMaximizeBehaviour();
+        // this.enableUndoMaximizeBehaviour(); // not in use
         this.enableScrollBehaviour();
         this.enableOverviewClosingBehaviour();
         this.enableSettingsListener();
         this.enablePanelHoverColorListeners();
-        this.resizeToPill();
+        this.enableOverviewShowingBehaviour();
+        // this.resizeToPill(); // part of this.onSettingChanged();
+        // this.enableClickToHideBehaviour(); // part of this.onSettingChanged();
+        // this.enableDockHoverListener(); // part of this.onSettingChanged();
+
+        this.onSettingChanged();
     }
 
     disable() {
@@ -102,9 +107,14 @@ export default class PanelPillExtension extends Extension {
         this.disableUndoMaximizeBehaviour();
         this.disableScrollBehaviour();
         this.disableOverviewClosingBehaviour();
+        this.disableOverviewShowingBehaviour();
         this.disableSettingsListener();
-        this.disableHoverListeners();
+        this.disablePanelHoverColorListeners();
+        this.disableDockHoverListener();
+        this.disableShowAppButton();
+        this.undockify();
         this.resizeBackToVanilla();
+
         Main.panel.opacity = PANEL_OPACITY_MAX;
     }
 
@@ -222,61 +232,93 @@ export default class PanelPillExtension extends Extension {
     }
 
     dockify() {
-        const dash = Main.overview._overview.first_child.get_children().find(c => c.name === "dash") || Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child;
-        const box = new St.BoxLayout({ name: UNIQUE_DASH_WRAPPER_NAME });
+        const box = new St.BoxLayout({
+            name: "UNIQUE_DASH_WRAPPER_NAME"
+        });
         box.height = global.screen_height;
         box.width = global.screen_width;
-        dash.get_parent().remove_child(dash);
+        const originalWrapper = Main.overview.dash.get_parent();
+        originalWrapper.set_name("UNIQUE_DASH_WRAPPER_NAME2");
+        originalWrapper.remove_child(Main.overview.dash);
         Main.uiGroup.add_child(box);
-        box.add_child(dash);
-        dash.x_align = Clutter.ActorAlign.CENTER;
-        dash.x_expand = true;
-        dash.y_align = Clutter.ActorAlign.END;
+        box.add_child(Main.overview.dash);
+        Main.overview.dash.x_align = Clutter.ActorAlign.CENTER;
+        Main.overview.dash.x_expand = true;
+        Main.overview.dash.y_align = Clutter.ActorAlign.END;
     }
 
     undockify() {
-        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
-        dash.get_parent().remove_child(dash);
+        Main.overview.dash.get_parent().remove_child(dash);
         Main.overview._overview.add_child(dash);
     }
 
-    hideDock() {
-        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
-        dash.ease({
+    get hideDock() {
+        // const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        Main.overview.dash.ease({
             translation_y: 100,
             duration: DURATION_FLICK,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK
         });
     }
 
-    showDock() {
-        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
-        dash.ease({
+    get showDock() {
+        Main.overview.dash.ease({
             translation_y: 0,
             duration: DURATION_FLICK,
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK
         });
     }
+    get showDockNow() {
+        Main.overview.dash.translation_y = 0;
+    }
 
     // EVENT TRIGGERED LOGIC
 
     enableDockHoverListener() {
-        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+        return;
+        this.enableDockHoverListener3();
+    }
+
+    enableDockHoverListener3() {
+        Main.overview.dash.set_reactive(true);
         this.#hoverDockListenerAndID.push([
-            dash,
-            dash.connect("enter-event", () => {
-                const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + ";";
-                elem.style = (elem.style ?? "") + styleLine;
-                this.showDock();
+            Main.overview.dash,
+            Main.overview.dash.connect("enter-event", () => {
+                /* this.showDock(); */ Main.overview.dash.set_translation(0, 0, 0);
+                if (Main.overview.visible) return;
+                const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + "; border-radius:99;";
+                Main.overview.dash.set_style(styleLine);
             })
         ]);
         this.#hoverDockListenerAndID.push([
-            dash,
-            dash.connect("leave-event", () => {
-                elem.style = elem.style?.replace(/box-shadow:[^;]*;?/g, "");
-                this.hideDock();
+            Main.overview.dash,
+            Main.overview.dash.connect("leave-event", () => {
+                Main.overview.dash.set_style(null);
+                if (!Main.overview.visible) {
+                    Main.overview.dash.set_translation(0, 100, 0);/*
+                    this.hideDock(); */
+                }
             })
         ]);
+    }
+
+
+    enableDockHoverListener2broken() {
+        Main.overview.dash.last_child.first_child.get_children().map(c1 => c1.first_child).map(c2 => {
+            if (!c2?.connect) return;
+            this.#hoverDockListenerAndID.push([
+                c2,
+                c2.connect("enter-event", () => {
+                    c2.first_child.first_child.style = "box-shadow: 0 0 2px 1px darkblue; border-radius:99;";
+                })
+            ]);
+            this.#hoverDockListenerAndID.push([
+                c2,
+                c2.connect("leave-event", () => {
+                    c2.first_child.first_child.style = "";
+                })
+            ]);
+        });
     }
 
 
@@ -286,11 +328,10 @@ export default class PanelPillExtension extends Extension {
     }
 
     enableShowAppButton() {
-        const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
         this.#appButtonClickListernerElemAndID.map(([elem, id]) => elem?.disconnect(id));
         this.#appButtonClickListernerElemAndID = [];
-        const elem = dash.last_child.last_child.first_child;
-        id = elem.connect('button-press-event', () => Main.overview.show());
+        const elem = Main.overview.dash.last_child.last_child.first_child;
+        const id = elem.connect('button-press-event', () => Main.overview.show());
         this.#appButtonClickListernerElemAndID.push([elem, id]);
     }
 
@@ -320,8 +361,8 @@ export default class PanelPillExtension extends Extension {
             });
     }
 
-    disableHoverListeners() {
-        this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem.style = null);
+    disablePanelHoverColorListeners() {
+        this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem?.set_style(null));
         this.#hoverListenerElemsAndIDs.map(([elem, id]) => elem?.disconnect(id));
         this.#hoverListenerElemsAndIDs = [];
     }
@@ -347,14 +388,43 @@ export default class PanelPillExtension extends Extension {
         } else {
             this.disableClickToHideBehaviour();
         }
+        if (this.isSettingTrue(SETTING_EASY_DOCK)) {
+            this.dockify();
+            this.enableDockHoverListener();
+            this.enableShowAppButton();
+        } else {
+            this.disableDockHoverListener();
+            this.disableShowAppButton();
+            this.undockify();
+        }
     }
+
+    overviewShowingBehaviour() {
+        if (this.isSettingTrue(SETTING_EASY_DOCK)) {
+            this.showDock();
+        }
+    }
+    enableOverviewShowingBehaviour() {
+        if (this.#mainOverviewListenerID1 != null)
+            Main.overview.disconnect(this.#mainOverviewListenerID1);
+        this.#mainOverviewListenerID1 = Main.overview.connect('showing', this.overviewShowingBehaviour.bind(this));
+    }
+
+    disableOverviewShowingBehaviour() {
+        if (this.#mainOverviewListenerID1 != null)
+            Main.overview.disconnect(this.#mainOverviewListenerID1);
+        this.#mainOverviewListenerID1 = null;
+    }
+
 
     overviewClosingBehaviour() {
         // for some funny reason it only works with delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
         this.#timeoutRoundnessID = setTimeout(this.setPanelStyle.bind(this), ROUND_CORNERS_DELAY);
-
+        if (this.isSettingTrue(SETTING_EASY_DOCK)) {
+            this.hideDock();
+        }
     }
 
     enableOverviewClosingBehaviour() {

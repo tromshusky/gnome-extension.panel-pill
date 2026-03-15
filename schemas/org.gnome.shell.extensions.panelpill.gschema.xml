@@ -15,5 +15,8 @@
     <key name="hide-button" type="b">
       <default>true</default>
     </key>
+    <key name="easy-dock" type="b">
+      <default>true</default>
+    </key>
   </schema>
 </schemalist>
