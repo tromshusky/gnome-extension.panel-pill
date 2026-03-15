@@ -271,8 +271,8 @@ export default class PanelPillExtension extends Extension {
     }
 
     undockify() {
-        Main.overview.dash.get_parent().remove_child(dash);
-        Main.overview._overview.add_child(dash);
+        Main.overview.dash.get_parent().remove_child(Main.overview.dash);
+        Main.overview._overview.add_child(Main.overview.dash);
         Main.overview.dash.set_style(null);
         Main.overview.dash.first_child.set_style(null);
         Main.overview.dash.first_child.set_opacity(OPACITY_MAX);
