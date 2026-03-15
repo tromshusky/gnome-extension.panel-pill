@@ -13,7 +13,7 @@ const DURATION_FLICK = 200;
 const DURATION_RETURN = 2000;
 const MAXIMIZED_V_H = 3;
 const PANEL_OPACITY_HIGH = 223;
-const PANEL_OPACITY_MAX = 255;
+const OPACITY_MAX = 255;
 const PANEL_OPACITY_LOW = 100;
 const PANEL_RATIO = 20;
 const PANEL_GAP = 18;
@@ -34,8 +34,6 @@ const ANIMATION_RIGHT = 2;
 const ANIMATION_RIGHTRIGHT = 3;
 const ANIMATION_DOWN = 4;
 const ANIMATION_UP = 5;
-
-// const UNIQUE_DASH_WRAPPER_NAME = "panelpilldashwrappingbox";
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
@@ -70,6 +68,8 @@ export default class PanelPillExtension extends Extension {
     #appButtonClickListernerElemAndID = [];
     #hoverDockListenerAndID = [];
 
+    #startupListenerID = null;
+
     #timeoutVanishID = null;
     #timeoutFadeinID = null;
     #timeoutFadeInStartEffectID = null;
@@ -85,7 +85,8 @@ export default class PanelPillExtension extends Extension {
         return this.getLogger();
     }
 
-    enable() {
+
+    enable1() {
         global._panelpill = this;
 
 
@@ -102,7 +103,7 @@ export default class PanelPillExtension extends Extension {
         this.onSettingChanged();
     }
 
-    disable() {
+    disable1() {
         this.disableClickToHideBehaviour();
         this.disableUndoMaximizeBehaviour();
         this.disableScrollBehaviour();
@@ -115,8 +116,28 @@ export default class PanelPillExtension extends Extension {
         this.undockify();
         this.resizeBackToVanilla();
 
-        Main.panel.opacity = PANEL_OPACITY_MAX;
+        Main.panel.opacity = OPACITY_MAX;
     }
+
+    enable() {
+        if (Main.layoutManager._startingUp === false) {
+            this.dockify();
+        } else {
+            if (this.#startupListenerID) {
+                Main.layoutManager.disconnect(this.#startupListenerID);
+            }
+            this.#startupListenerID = Main.layoutManager.connect('startup-complete', () => this.enable1());
+        }
+    }
+
+    disable() {
+        if (this.#startupListenerID) {
+            Main.layoutManager.disconnect(this.#startupListenerID);
+        }
+        this.#startupListenerID = null;
+        this.disable1();
+    }
+
 
     get settings() {
         return this.getSettings();
@@ -245,30 +266,35 @@ export default class PanelPillExtension extends Extension {
         Main.overview.dash.x_align = Clutter.ActorAlign.CENTER;
         Main.overview.dash.x_expand = true;
         Main.overview.dash.y_align = Clutter.ActorAlign.END;
+        Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
+        Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_LOW);
     }
 
     undockify() {
         Main.overview.dash.get_parent().remove_child(dash);
         Main.overview._overview.add_child(dash);
+        Main.overview.dash.set_style(null);
+        Main.overview.dash.first_child.set_style(null);
+        Main.overview.dash.first_child.set_opacity(OPACITY_MAX);
     }
 
-    get hideDock() {
-        // const dash = Main.uiGroup.get_children().find(c => c.name === UNIQUE_DASH_WRAPPER_NAME)?.first_child || Main.overview._overview.first_child.get_children().find(c => c.name === "dash");
+    hideDock() {
         Main.overview.dash.ease({
             translation_y: 100,
             duration: DURATION_FLICK,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK
+            mode: Clutter.AnimationMode.EASE_IN_SINE
         });
     }
 
-    get showDock() {
+    showDock() {
         Main.overview.dash.ease({
             translation_y: 0,
             duration: DURATION_FLICK,
-            mode: Clutter.AnimationMode.EASE_IN_OUT_BACK
+            mode: Clutter.AnimationMode.EASE_OUT_SINE
         });
     }
-    get showDockNow() {
+
+    showDockNow() {
         Main.overview.dash.translation_y = 0;
     }
 
@@ -279,9 +305,10 @@ export default class PanelPillExtension extends Extension {
         this.#hoverDockListenerAndID.push([
             Main.overview.dash,
             Main.overview.dash.connect("enter-event", () => {
-                /* this.showDock(); */ Main.overview.dash.set_translation(0, 0, 0);
+                this.showDock();
                 if (Main.overview.visible) return;
                 const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + "; border-radius:99;";
+                Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_HIGH);
                 Main.overview.dash.set_style(styleLine);
             })
         ]);
@@ -289,9 +316,9 @@ export default class PanelPillExtension extends Extension {
             Main.overview.dash,
             Main.overview.dash.connect("leave-event", () => {
                 Main.overview.dash.set_style(null);
+                Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_LOW);
                 if (!Main.overview.visible) {
-                    Main.overview.dash.set_translation(0, 100, 0);/*
-                    this.hideDock(); */
+                    this.hideDock();
                 }
             })
         ]);
