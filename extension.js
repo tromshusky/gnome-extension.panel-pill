@@ -196,7 +196,7 @@ export default class PanelPillExtension extends Extension {
 
     resizeToPill() {
         const margin = this.panelTopMargin + Main.panel.height + this.panelTopMargin;
-        Main.overview._overview.first_child.first_child.style = "margin-top:" + margin + "px;"
+        Main.overview._overview.first_child.first_child.style = `margin-top: ${margin}px;`
 
 
         const new_width = this.isSettingTrue(SETTING_ISLANDS) ? global.screen_width - 2 * this.panelTopMargin : get_panel_width();
@@ -207,7 +207,7 @@ export default class PanelPillExtension extends Extension {
         Main.panel.height = PANEL_HEIGHT;
         Main.panel.reactive = !this.isSettingTrue(SETTING_ISLANDS);
 
-        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : "border-radius: " + Main.panel.height + "px;";
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height}px;`;
         Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
 
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
@@ -231,7 +231,7 @@ export default class PanelPillExtension extends Extension {
 
     setPanelStyle() {
         const style_islands = this.isSettingTrue(SETTING_ISLANDS) ? "background-color: transparent;" : "";
-        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height} px;`;
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height}px;`;
 
         Main.panel.set_style(style_islands + style_square);
     }
@@ -313,10 +313,11 @@ export default class PanelPillExtension extends Extension {
     }
 
     setColoredDashStyle() {
-        const shadowStyle = `box-shadow:0 0 ${Main.overview.dash.height / 8}px -${Main.overview.dash.height / 32}px ${this.darkAccentColor};`;
-        const radiusStyle = `border-radius:${Main.overview.dash.height / 4};`;
+        const shadowStyle = `box-shadow:0 0 ${Main.overview.dash.height / 4}px -${Main.overview.dash.height / 32}px ${this.darkAccentColor};`;
+        const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px;`;
         Main.overview.dash.set_style(shadowStyle + radiusStyle);
         Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
+        Main.overview.dash.first_child.set_opacity(0);
     }
 
     // EVENT TRIGGERED LOGIC
@@ -327,14 +328,11 @@ export default class PanelPillExtension extends Extension {
             Main.overview.dash,
             Main.overview.dash.connect("enter-event", () => {
                 this.showDock();
-                if (Main.overview.visible) return;
-                Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_HIGH);
             })
         ]);
         this.#hoverDockListenerAndID.push([
             Main.overview.dash,
             Main.overview.dash.connect("leave-event", () => {
-                Main.overview.dash.first_child.set_opacity(PANEL_OPACITY_LOW);
                 if (!Main.overview.visible) {
                     this.hideDock();
                 }
@@ -388,7 +386,7 @@ export default class PanelPillExtension extends Extension {
                 this.#hoverListenerElemsAndIDs.push([
                     elem,
                     elem.connect("enter-event", () => {
-                        const styleLine = "box-shadow:0 0 16px 2px " + this.darkAccentColor + ";";
+                        const styleLine = `box-shadow: 0 0 16px 2px ${this.darkAccentColor};`;
                         elem.style = (elem.style ?? "") + styleLine;
                     })
                 ])
