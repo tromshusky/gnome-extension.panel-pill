@@ -264,25 +264,21 @@ export default class PanelPillExtension extends Extension {
     }
 
     dockify() {
-        const box = new St.BoxLayout({
-            name: "UNIQUE_DASH_WRAPPER_NAME"
-        });
+        const box = new St.BoxLayout();
         box.height = global.screen_height;
         box.width = global.screen_width;
-        const originalWrapper = Main.overview.dash.get_parent();
-        originalWrapper.set_name("UNIQUE_DASH_WRAPPER_NAME2");
-        originalWrapper.remove_child(Main.overview.dash);
+        Main.overview.dash.get_parent().remove_child(Main.overview.dash);
         Main.uiGroup.add_child(box);
         box.add_child(Main.overview.dash);
-        Main.overview.dash.x_align = Clutter.ActorAlign.CENTER;
         Main.overview.dash.x_expand = true;
+        Main.overview.dash.x_align = Clutter.ActorAlign.CENTER;
         Main.overview.dash.y_align = Clutter.ActorAlign.END;
         this.setColoredDashStyle();
     }
 
     undockify() {
         Main.overview.dash.get_parent().remove_child(Main.overview.dash);
-        Main.overview._overview.add_child(Main.overview.dash);
+        Main.overview._overview.first_child.add_child(Main.overview.dash);
         this.resetDashStyle();
     }
 
