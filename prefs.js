@@ -22,8 +22,9 @@ const settings = {
 const group1 = ["Appearance", "Configure the appearance of the panel", [_SQR_COR, _PNL_GAP, _ISLANDS]];
 const group2 = ["Other", "Other panel related settings.", [_HDE_BTN, _WIN_GAP]];
 const group3 = ["Dock", "Dock Settings", [_EZ_DOCK]];
-const page1 = ["General", "dialog-information-symbolic", [group1, group2, group3]];
-const my_settings = [page1];
+const page1 = ["Panel", "dialog-information-symbolic", [group1, group2]];
+const page2 = ["Dock",  "dialog-information-symbolic", [group3]];
+const my_settings = [page1, page2];
 
 export default class ExamplePreferences extends ExtensionPreferences {
 
@@ -70,6 +71,8 @@ export default class ExamplePreferences extends ExtensionPreferences {
             return pPage;
         };
 
-        my_settings.map(createPage).map(addResetToPage).forEach(page => window.add(page));
+        const resetPage = addResetToPage(createPage(["Reset", "view-refresh-symbolic", []]));
+
+        my_settings.map(createPage).concat(resetPage).forEach(page => window.add(page));
     }
 }
