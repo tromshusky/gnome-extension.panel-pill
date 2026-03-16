@@ -292,7 +292,9 @@ export default class PanelPillExtension extends Extension {
     }
 
     showDock() {
+        Main.panel.visible = true;
         Main.overview.dash.ease({
+            opacity: OPACITY_MAX,
             translation_y: 0,
             duration: DURATION_FLICK,
             mode: Clutter.AnimationMode.EASE_OUT_SINE
@@ -476,33 +478,35 @@ export default class PanelPillExtension extends Extension {
     }
 
     enableOverviewClosingBehaviour() {
-        if (this.#mainOverviewListenerID2 != null)
-            Main.overview.disconnect(this.#mainOverviewListenerID2);
+        if (this.#mainOverviewListenerID2 != null) Main.overview.disconnect(this.#mainOverviewListenerID2);
         this.#mainOverviewListenerID2 = Main.overview.connect('hiding', () => this.overviewClosingBehaviour());
     }
 
     disableOverviewClosingBehaviour() {
-        if (this.#mainOverviewListenerID2 != null)
-            Main.overview.disconnect(this.#mainOverviewListenerID2);
+        if (this.#mainOverviewListenerID2 != null) Main.overview.disconnect(this.#mainOverviewListenerID2);
         this.#mainOverviewListenerID2 = null;
-        if (this.#timeoutRoundnessID != null)
-            clearTimeout(this.#timeoutRoundnessID);
+        if (this.#timeoutRoundnessID != null) clearTimeout(this.#timeoutRoundnessID);
         this.#timeoutRoundnessID = null;
     }
 
-    clickToHideBehaviour() {
+    clickToHideBehaviour(a, b) {
+
+        if (Clutter.BUTTON_SECONDARY === b.get_button()) {
+
+            Main.overview.dash.opacity = 0;
+            Main.notify("Fullscreen modus", "To exit, move the mouse to the dock.");
+
+        } else {
+
+            if (this.#timeoutVanishID != null) clearTimeout(this.#timeoutVanishID);
+            this.#timeoutVanishID = setTimeout(() => Main.panel.show(), TIEMOUT_HIDDEN);
+
+            this.temporarySetReactivityFalse(TIEMOUT_HIDDEN + DURATION_FADEIN);
+
+        }
+
         Main.panel.hide();
-        // when hidden, there is no leave-event trigger
-        Main.panel.first_child.first_child.first_child.style = "";
-
-        if (this.#timeoutVanishID != null)
-            clearTimeout(this.#timeoutVanishID);
-
-        this.#timeoutVanishID = setTimeout(() => {
-            Main.panel.show();
-        }, TIEMOUT_HIDDEN);
-
-        this.temporarySetReactivityFalse(TIEMOUT_HIDDEN + DURATION_FADEIN);
+        Main.panel.first_child.first_child.first_child.style = ""; // when hidden, there is no leave-event trigger, so we remove the blur style manually
 
         return Clutter.EVENT_STOP; // Prevent further handling of the event
     }
@@ -510,7 +514,7 @@ export default class PanelPillExtension extends Extension {
     enableClickToHideBehaviour() {
         if (this.#mainPanelClickListenerID1 != null)
             Main.panel.first_child.first_child.first_child.disconnect(this.#mainPanelClickListenerID1);
-        this.#mainPanelClickListenerID1 = Main.panel.first_child.first_child.first_child.connect('button-press-event', () => this.clickToHideBehaviour());
+        this.#mainPanelClickListenerID1 = Main.panel.first_child.first_child.first_child.connect('button-press-event', (a, b) => this.clickToHideBehaviour(a, b));
     }
 
     disableClickToHideBehaviour() {
