@@ -459,8 +459,19 @@ export default class PanelPillExtension extends Extension {
             clearTimeout(this.#timeoutRoundnessID);
         this.#timeoutRoundnessID = setTimeout(() => this.setPanelStyle(), ROUND_CORNERS_DELAY);
         if (this.isSettingTrue(SETTING_EASY_DOCK)) {
-            this.hideDock();
             this.setColoredDashStyle();
+            const [mouseX, mouseY] = global.get_pointer();
+
+            const [dashX, dashY] = Main.overview.dash.get_transformed_position();
+            const [dashW, dashH] = Main.overview.dash.get_transformed_size();
+
+            const insideDash =
+                mouseX >= dashX &&
+                mouseX <= dashX + dashW &&
+                mouseY >= dashY &&
+                mouseY <= dashY + dashH;
+            if (!insideDash)
+                this.hideDock();
         }
     }
 
