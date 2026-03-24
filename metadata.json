@@ -5,9 +5,10 @@
   "name": "Panel Pill",
   "shell-version": [
     "48",
-    "49"
+    "49",
+    "50"
   ],
   "url": "https://github.com/tromshusky/gnome-extension.panel-pill",
   "uuid": "panel-pill@tromshusky",
-  "version": 10
+  "version": 20260324
 }
