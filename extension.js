@@ -1,9 +1,14 @@
-// @ts-ignore
+/* @ts-ignore */
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-// @ts-ignore
+/* @ts-ignore */
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
+/* @ts-ignore */
+import Clutter from "gi://Clutter";
+/* @ts-ignore */
+import St from "gi://St";
+/* @ts-ignore */
+import Gio from 'gi://Gio';
 import FeatureManager from './gnome-extensions-utils/FeatureManager.js';
-
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
@@ -12,27 +17,21 @@ const SETTING_SQUARE_CORNERS = "square-corners";
 const SETTING_HIDE_BUTTON = "hide-button";
 const SETTING_EASY_DOCK = "easy-dock";
 
+const OPACITY_MAX = 255;
+const OPACITY_HIGH = 222;
+const DURATION_DOCK_EASEIN = 200;
+
 export default class PanelPillExtension extends Extension {
     #featureManager = null;
 
-    #ORIGINAL_PANEL_HEIGHT = 32;
-    #OPACITY_MAX = 255;
-
-    OPACITY_HIGH = 222;
-
-    OVERVIEW_CORNER_DELAY = 1;
-    PANEL_GAP = 20;
-    PANEL_HEIGHT = 40;
-    WINDOW_GAP = 2;
-
-    panelPlacementLock = 0;
-
-    getSettings = super.getSettings;
-
     enable() {
         globalThis.global._panelpill = this;
-        this.islandFeature = this.newIslandFeature();
-        this.islandFeature.enable()
+        this.island = new Islands(this.featureManager, () => super.getSettings());
+        this.islandFeature = this.island.newIslandFeature();
+        this.islandFeature.enable();
+        this.easyDock = new EasyDock(this.featureManager, () => super.getSettings());
+        this.easyDockFeature = this.easyDock.newEasyDockFeature();
+        this.easyDockFeature.enable();
     }
 
     disable() {
@@ -45,6 +44,23 @@ export default class PanelPillExtension extends Extension {
     /** @returns {FeatureManager} */
     get featureManager() {
         return this.#featureManager ??= new FeatureManager();
+    }
+
+}
+
+class Islands {
+    panelPlacementLock = 0;
+    OVERVIEW_CORNER_DELAY = 1;
+    WINDOW_GAP = 2;
+    PANEL_GAP = 20;
+    PANEL_HEIGHT = 40;
+    #ORIGINAL_PANEL_HEIGHT = 32;
+
+    featureManager;
+    getSettings;
+    constructor(/** @type {FeatureManager} */ fm, getSettings) {
+        this.featureManager = fm;
+        this.getSettings = getSettings;
     }
 
     windowGap() {
@@ -89,11 +105,11 @@ export default class PanelPillExtension extends Extension {
     }
 
     setPanelStyle() {
-        Main.panel.opacity = this.#OPACITY_MAX;
+        Main.panel.opacity = OPACITY_MAX;
         Main.panel.style = "background-color: transparent;";
     }
     resetPanelStyle() {
-        Main.panel.opacity = this.#OPACITY_MAX;
+        Main.panel.opacity = OPACITY_MAX;
         Main.panel.style = null;
     }
 
@@ -103,10 +119,6 @@ export default class PanelPillExtension extends Extension {
     }
     resetOverviewMargin() {
         Main.overview._overview.first_child.first_child.style = null;
-    }
-
-    newEasyDockFeature() {
-
     }
 
     newIslandFeature() {
@@ -128,7 +140,6 @@ export default class PanelPillExtension extends Extension {
             const againSetPanel = () => {
                 if (this.panelPlacementLock > 0) return;
                 this.panelPlacementLock++;
-                // Main.notify("this.setPanelPlacement()");
                 this.setPanelPlacement();
                 this.panelPlacementLock--;
             };
@@ -138,6 +149,7 @@ export default class PanelPillExtension extends Extension {
                 event: "notify",
                 callback: againSetPanel
             };
+
             const onOverviewHide = {
                 connectable: Main.overview,
                 event: "hiding",
@@ -147,4 +159,154 @@ export default class PanelPillExtension extends Extension {
             return { onEnable: setPanel, onDisable: resetPanel, eventListeners: [onPanelResize, onOverviewHide] };
         });
     }
+}
+
+class EasyDock {
+    DURATION_DOCK_EASEIN = 200;
+
+    featureManager;
+    getSettings;
+    constructor(/** @type {FeatureManager} */ fm, getSettings) {
+        this.featureManager = fm;
+        this.getSettings = getSettings;
+    }
+
+    get darkAccentColor() {
+        const interfaceSettings = new Gio.Settings({ schema: 'org.gnome.desktop.interface' });
+        const gnomeColor = interfaceSettings.get_string('accent-color');
+
+        const colorMap = {
+            blue: 'DarkBlue',
+            teal: 'DarkCyan',
+            green: 'DarkGreen',
+            yellow: 'DarkGoldenRod',
+            orange: 'DarkOrange',
+            red: 'DarkRed',
+            pink: 'DeepPink',
+            purple: 'DarkMagenta',
+            slate: 'DarkSlateGray'
+        };
+
+        return colorMap[gnomeColor] || colorMap.slate;
+    }
+
+
+    setDashStyle() {
+        const shadowStyle = `box-shadow:0 0 ${Main.overview.dash.height / 4}px -${Main.overview.dash.height / 32}px ${this.darkAccentColor};`;
+        const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px;`;
+        Main.overview.dash.set_style(shadowStyle + radiusStyle);
+        Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
+        Main.overview.dash.first_child.set_opacity(0);
+    }
+    resetDashStyle() {
+        Main.overview.dash.set_style(null);
+        Main.overview.dash.first_child.set_style(null);
+        Main.overview.dash.first_child.set_opacity(OPACITY_MAX);
+    }
+
+
+    dockify() {
+        const box = new St.BoxLayout();
+        box.height = globalThis.global.screen_height;
+        box.width = globalThis.global.screen_width;
+        Main.overview.dash.get_parent().remove_child(Main.overview.dash);
+        Main.uiGroup.add_child(box);
+        box.add_child(Main.overview.dash);
+        Main.overview.dash.x_expand = true;
+        Main.overview.dash.x_align = Clutter.ActorAlign.CENTER;
+        Main.overview.dash.y_align = Clutter.ActorAlign.END;
+        this.setDashStyle();
+    }
+
+    undockify() {
+        Main.overview.dash.get_parent().remove_child(Main.overview.dash);
+        Main.overview._overview.first_child.add_child(Main.overview.dash);
+        this.showDockNow();
+        this.resetDashStyle();
+    }
+
+
+    hideDock() {
+        Main.overview.dash.ease({
+            translation_y: 100,
+            duration: this.DURATION_DOCK_EASEIN,
+            mode: Clutter.AnimationMode.EASE_IN_SINE
+        });
+    }
+
+    showDock() {
+        Main.panel.visible = true;
+        Main.overview.dash.ease({
+            opacity: OPACITY_MAX,
+            translation_y: 0,
+            duration: this.DURATION_DOCK_EASEIN,
+            mode: Clutter.AnimationMode.EASE_OUT_SINE
+        });
+    }
+
+    showDockNow() {
+        Main.overview.dash.translation_y = 0;
+    }
+
+
+
+    newEasyDockFeature() {
+
+        const onEnable = () => {
+            this.dockify();
+            Main.overview.dash.set_reactive(true);
+        }
+        const onDisable = () => {
+            this.undockify();
+            // this.resetDashStyle();
+            // this.showDockNow();
+        }
+        const onOverviewHide = () => {
+            this.hideDock();
+            this.setDashStyle();
+        }
+        const onOverviewShow = () => {
+            this.showDock();
+            this.resetDashStyle();
+        }
+
+        const overviewShowListener = {
+            connectable: Main.overview,
+            event: "showing",
+            callback: onOverviewShow
+        };
+        const overviewHideListener = {
+            connectable: Main.overview,
+            event: "hiding",
+            callback: onOverviewHide
+        };
+
+        const hoverDockEnterListener = {
+            connectable: Main.overview.dash,
+            event: "enter-event",
+            callback: () => this.showDock()
+        }
+
+        const hoverDockLeaveListener = {
+            connectable: Main.overview.dash,
+            event: "leave-event",
+            callback: () => {
+                if (!Main.overview.visible) {
+                    this.hideDock();
+                }
+            }
+        }
+
+        const appButton = Main.overview.dash.last_child.last_child.first_child;
+        const appButtonClickListener = {
+            connectable: appButton,
+            event: "button-press-event",
+            callback: () => Main.overview.show()
+        }
+
+
+        return this.featureManager.new({ onEnable, onDisable, eventListeners: [overviewShowListener, overviewHideListener, hoverDockEnterListener, hoverDockLeaveListener, appButtonClickListener] });
+    }
+
+
 }
