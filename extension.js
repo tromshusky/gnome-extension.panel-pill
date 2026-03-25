@@ -25,13 +25,12 @@ export default class PanelPillExtension extends Extension {
     enable() {
         globalThis.global._panelpill = this;
         this.islandFeature = this.getIslandFeature();
+        this.islandFeature.enable()
     }
 
     disable() {
         this.featureManager.disableAll();
         this.#featureManager = undefined;
-
-
         delete globalThis.global._panelpill;
     }
 
@@ -88,41 +87,43 @@ export default class PanelPillExtension extends Extension {
 
 
     getIslandFeature() {
-        const setPanel = () => {
-            this.setIslandsStyle();
-            this.setPanelPlacement();
-            this.setPanelReactivity();
-            this.setPanelStyle();
-        };
-        const resetPanel = () => {
-            this.resetIslandsStyle();
-            this.resetPanelPlacement();
-            this.resetPanelReactivity();
-            this.resetPanelStyle();
-        };
-        const callback1 = () => {
-            if (this.panelPlacementLock) return;
-            this.panelPlacementLock = true;
-            Main.notify("this.setPanelPlacement()");
-            this.setPanelPlacement();
-            this.panelPlacementLock = false;
-        };
-        
-        const delayedPlacement = (setTimeout) => {
-            setTimeout(() => this.setPanelPlacement(), 300);
-        }
-        
-        const el1 = {
-            connectable: Main.panel,
-            event: "notify",
-            callback: callback1
-        };
-        const el2 = {
-            connectable: Main.overview,
-            event: "hiding",
-            callback: setTimeout => connectedTimeout()
-        };
+        return this.featureManager.newWithTimeouts(setTimeout => {
+            const setPanel = () => {
+                this.setIslandsStyle();
+                this.setPanelPlacement();
+                this.setPanelReactivity();
+                this.setPanelStyle();
+            };
+            const resetPanel = () => {
+                this.resetIslandsStyle();
+                this.resetPanelPlacement();
+                this.resetPanelReactivity();
+                this.resetPanelStyle();
+            };
+            const againSetPanel = () => {
+                if (this.panelPlacementLock) return;
+                this.panelPlacementLock = true;
+                Main.notify("this.setPanelPlacement()");
+                this.setPanelPlacement();
+                this.panelPlacementLock = false;
+            };
 
-        const newFeature = this.featureManager.new(setPanel, resetPanel, [el1, el2]);
+            const delayedPlacement = () => {
+                setTimeout(() => this.setPanelPlacement(), 300);
+            }
+
+            const onPanelResize = {
+                connectable: Main.panel,
+                event: "notify",
+                callback: againSetPanel
+            };
+            const onOverviewHide = {
+                connectable: Main.overview,
+                event: "hiding",
+                callback: delayedPlacement
+            };
+
+            return { onEnable: setPanel, onDisable: resetPanel, eventListeners: [onPanelResize, onOverviewHide] };
+        });
     }
 }
