@@ -163,6 +163,7 @@ class Islands {
 
 class EasyDock {
     DURATION_DOCK_EASEIN = 200;
+    OPACITY_GLASSY = 100;
 
     featureManager;
     getSettings;
@@ -195,8 +196,8 @@ class EasyDock {
         const shadowStyle = `box-shadow:0 0 ${Main.overview.dash.height / 4}px -${Main.overview.dash.height / 32}px ${this.darkAccentColor};`;
         const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px;`;
         Main.overview.dash.set_style(shadowStyle + radiusStyle);
-        Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
-        Main.overview.dash.first_child.set_opacity(0);
+        // Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
+        Main.overview.dash.first_child.set_opacity(this.OPACITY_GLASSY);
     }
     resetDashStyle() {
         Main.overview.dash.set_style(null);
@@ -228,6 +229,7 @@ class EasyDock {
 
     hideDock() {
         Main.overview.dash.ease({
+            opacity: this.OPACITY_GLASSY,
             translation_y: 100,
             duration: this.DURATION_DOCK_EASEIN,
             mode: Clutter.AnimationMode.EASE_IN_SINE
