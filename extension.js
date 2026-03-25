@@ -2,12 +2,8 @@
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 // @ts-ignore
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-import FeatureManager from './gnome-extensions-utils/FeatureManager';
-// import Clutter from "gi://Clutter";
-// import Gio from 'gi://Gio';
+import FeatureManager from './gnome-extensions-utils/FeatureManager.js';
 
-// import Shell from "gi://Shell";
-// import St from "gi://St";
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
@@ -15,17 +11,20 @@ const SETTING_WINDOW_GAP = "window-gap";
 const SETTING_SQUARE_CORNERS = "square-corners";
 const SETTING_HIDE_BUTTON = "hide-button";
 const SETTING_EASY_DOCK = "easy-dock";
-// @ts-ignore
-const global = global;
-
 
 export default class PanelPillExtension extends Extension {
     #featureManager = null;
     WINDOW_GAP = 2;
     PANEL_GAP = 20;
+    OVERVIEW_CORNER_DELAY = 300;
+
+    panelPlacementLock = false;
+
+    getSettings = super.getSettings;
 
     enable() {
-        global._panelpill = this;
+        globalThis.global._panelpill = this;
+        this.islandFeature = this.getIslandFeature();
     }
 
     disable() {
@@ -33,13 +32,9 @@ export default class PanelPillExtension extends Extension {
         this.#featureManager = undefined;
 
 
-        delete global._panelpill;
+        delete globalThis.global._panelpill;
     }
 
-    /** @returns {{ get_boolean:(name: string) => boolean }} */
-    settings() {
-        return super.settings();
-    }
 
     /** @returns {FeatureManager} */
     get featureManager() {
@@ -47,32 +42,32 @@ export default class PanelPillExtension extends Extension {
     }
 
     windowGap() {
-        return this.settings().get_boolean(SETTING_WINDOW_GAP) ? this.WINDOW_GAP : 0;
+        return this.getSettings().get_boolean(SETTING_WINDOW_GAP) ? this.WINDOW_GAP : 0;
     }
 
     panelGap() {
-        return this.settings().get_boolean(SETTING_PANEL_GAP) ? this.PANEL_GAP : 0;
+        return this.getSettings().get_boolean(SETTING_PANEL_GAP) ? this.PANEL_GAP : 0;
     }
 
+    setIslandsStyle() {
+        Main.panel.get_children().map(c => c.style = "background-color: rgba(100,100,100,100); border-radius:999px;")
+    }
+    resetIslandsStyle() {
+        Main.panel.get_children().map(c => c.style = null)
+    }
+
+
     setPanelPlacement() {
-        Main.layoutManager.panelBox.y = global.screen_height - this.windowGap();
+        Main.layoutManager.panelBox.y = globalThis.global.screen_height - this.windowGap();
         Main.layoutManager.panelBox.x = this.panelGap();
-        Main.layoutManager.panelBox.width = global.screen_width - this.panelGap() - this.panelGap();
+        Main.layoutManager.panelBox.width = globalThis.global.screen_width - this.panelGap() - this.panelGap();
         Main.panel.translation_y = this.panelGap() - Main.layoutManager.panelBox.y;
     }
     resetPanelPlacement() {
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.x = 0;
-        Main.layoutManager.panelBox.width = global.screen_width;
+        Main.layoutManager.panelBox.width = globalThis.global.screen_width;
         Main.panel.translation_y = 0;
-    }
-
-    setPanelStyle() {
-        Main.panel.style = "background-color: transparent;";
-    }
-
-    resetPanelStyle() {
-        Main.panel.style = null;
     }
 
     setPanelReactivity() {
@@ -82,22 +77,52 @@ export default class PanelPillExtension extends Extension {
         Main.panel.reactive = true;
     }
 
-    setIslandsStyle() {
-        Main.panel.get_children().map(c => c.style = "background-color: rgba(100,100,100,100); border-radius:999;")
+    setPanelStyle() {
+        Main.panel.opacity = 222;
+        Main.panel.style = "background-color: transparent;";
+    }
+    resetPanelStyle() {
+        Main.panel.opacity = 255;
+        Main.panel.style = null;
     }
 
-    getIslandFeature() {
-        const onEnable = () => undefined;
-        const onDisable = () => {
-        };
 
+    getIslandFeature() {
+        const setPanel = () => {
+            this.setIslandsStyle();
+            this.setPanelPlacement();
+            this.setPanelReactivity();
+            this.setPanelStyle();
+        };
+        const resetPanel = () => {
+            this.resetIslandsStyle();
+            this.resetPanelPlacement();
+            this.resetPanelReactivity();
+            this.resetPanelStyle();
+        };
+        const callback1 = () => {
+            if (this.panelPlacementLock) return;
+            this.panelPlacementLock = true;
+            Main.notify("this.setPanelPlacement()");
+            this.setPanelPlacement();
+            this.panelPlacementLock = false;
+        };
+        
+        const delayedPlacement = (setTimeout) => {
+            setTimeout(() => this.setPanelPlacement(), 300);
+        }
+        
         const el1 = {
             connectable: Main.panel,
             event: "notify",
-            callback: () => this.setPanelPlacement()
+            callback: callback1
+        };
+        const el2 = {
+            connectable: Main.overview,
+            event: "hiding",
+            callback: setTimeout => connectedTimeout()
         };
 
-        const asd = this.featureManager.new(onEnable, onDisable, [el1]);
-
+        const newFeature = this.featureManager.new(setPanel, resetPanel, [el1, el2]);
     }
 }
