@@ -14,17 +14,24 @@ const SETTING_EASY_DOCK = "easy-dock";
 
 export default class PanelPillExtension extends Extension {
     #featureManager = null;
-    WINDOW_GAP = 2;
-    PANEL_GAP = 20;
-    OVERVIEW_CORNER_DELAY = 300;
 
-    panelPlacementLock = false;
+    #ORIGINAL_PANEL_HEIGHT = 32;
+    #OPACITY_MAX = 255;
+
+    OPACITY_HIGH = 222;
+
+    OVERVIEW_CORNER_DELAY = 1;
+    PANEL_GAP = 20;
+    PANEL_HEIGHT = 40;
+    WINDOW_GAP = 2;
+
+    panelPlacementLock = 0;
 
     getSettings = super.getSettings;
 
     enable() {
         globalThis.global._panelpill = this;
-        this.islandFeature = this.getIslandFeature();
+        this.islandFeature = this.newIslandFeature();
         this.islandFeature.enable()
     }
 
@@ -48,8 +55,9 @@ export default class PanelPillExtension extends Extension {
         return this.getSettings().get_boolean(SETTING_PANEL_GAP) ? this.PANEL_GAP : 0;
     }
 
+
     setIslandsStyle() {
-        Main.panel.get_children().map(c => c.style = "background-color: rgba(100,100,100,100); border-radius:999px;")
+        Main.panel.get_children().map(c => c.style = "background-color: black; border-radius:999px;")
     }
     resetIslandsStyle() {
         Main.panel.get_children().map(c => c.style = null)
@@ -60,13 +68,17 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.y = globalThis.global.screen_height - this.windowGap();
         Main.layoutManager.panelBox.x = this.panelGap();
         Main.layoutManager.panelBox.width = globalThis.global.screen_width - this.panelGap() - this.panelGap();
+        Main.panel.height = this.PANEL_HEIGHT;
         Main.panel.translation_y = this.panelGap() - Main.layoutManager.panelBox.y;
     }
     resetPanelPlacement() {
+        this.panelPlacementLock++;
         Main.layoutManager.panelBox.y = 0;
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = globalThis.global.screen_width;
+        Main.panel.height = this.#ORIGINAL_PANEL_HEIGHT;
         Main.panel.translation_y = 0;
+        this.panelPlacementLock--;
     }
 
     setPanelReactivity() {
@@ -77,40 +89,49 @@ export default class PanelPillExtension extends Extension {
     }
 
     setPanelStyle() {
-        Main.panel.opacity = 222;
+        Main.panel.opacity = this.#OPACITY_MAX;
         Main.panel.style = "background-color: transparent;";
     }
     resetPanelStyle() {
-        Main.panel.opacity = 255;
+        Main.panel.opacity = this.#OPACITY_MAX;
         Main.panel.style = null;
     }
 
+    setOverviewMargin() {
+        const margin = this.panelGap() + Main.panel.height + this.panelGap();
+        Main.overview._overview.first_child.first_child.style = `margin-top: ${margin}px;`
+    }
+    resetOverviewMargin() {
+        Main.overview._overview.first_child.first_child.style = null;
+    }
 
-    getIslandFeature() {
+    newEasyDockFeature() {
+
+    }
+
+    newIslandFeature() {
         return this.featureManager.newWithTimeouts(setTimeout => {
             const setPanel = () => {
                 this.setIslandsStyle();
                 this.setPanelPlacement();
                 this.setPanelReactivity();
                 this.setPanelStyle();
+                this.setOverviewMargin();
             };
             const resetPanel = () => {
                 this.resetIslandsStyle();
                 this.resetPanelPlacement();
                 this.resetPanelReactivity();
                 this.resetPanelStyle();
+                this.resetOverviewMargin();
             };
             const againSetPanel = () => {
-                if (this.panelPlacementLock) return;
-                this.panelPlacementLock = true;
-                Main.notify("this.setPanelPlacement()");
+                if (this.panelPlacementLock > 0) return;
+                this.panelPlacementLock++;
+                // Main.notify("this.setPanelPlacement()");
                 this.setPanelPlacement();
-                this.panelPlacementLock = false;
+                this.panelPlacementLock--;
             };
-
-            const delayedPlacement = () => {
-                setTimeout(() => this.setPanelPlacement(), 300);
-            }
 
             const onPanelResize = {
                 connectable: Main.panel,
@@ -120,7 +141,7 @@ export default class PanelPillExtension extends Extension {
             const onOverviewHide = {
                 connectable: Main.overview,
                 event: "hiding",
-                callback: delayedPlacement
+                callback: () => setTimeout(() => this.setPanelStyle(), this.OVERVIEW_CORNER_DELAY)
             };
 
             return { onEnable: setPanel, onDisable: resetPanel, eventListeners: [onPanelResize, onOverviewHide] };
