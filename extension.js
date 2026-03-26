@@ -18,18 +18,39 @@ const SETTING_HIDE_BUTTON = "hide-button";
 const SETTING_EASY_DOCK = "easy-dock";
 
 const OPACITY_MAX = 255;
-const OPACITY_HIGH = 222;
-const DURATION_DOCK_EASEIN = 200;
 
 export default class PanelPillExtension extends Extension {
     #featureManager = null;
 
+
+
     enable() {
         globalThis.global._panelpill = this;
-        this.island = new Islands(this.featureManager, () => super.getSettings());
+        /** @type {Set<Function>} */
+        this.onSettingsChangeCallbacks = new Set();
+        this.settingsChangeListenerFeature = this.featureManager.new({
+            onEnable: undefined, onDisable: undefined, eventListeners: [
+                {
+                    connectable: super.getSettings(),
+                    event: "changed",
+                    callback: (...args) => this.onSettingsChangeCallbacks.forEach(fun => fun(...args))
+                }
+            ]
+        })
+
+
+        this.island = new Islands(
+            this.featureManager,
+            () => super.getSettings(),
+            onSettingsChange1 => this.onSettingsChangeCallbacks.add(onSettingsChange1)
+        );
         this.islandFeature = this.island.newIslandFeature();
         this.islandFeature.enable();
-        this.easyDock = new EasyDock(this.featureManager, () => super.getSettings());
+        this.easyDock = new EasyDock(
+            this.featureManager,
+            () => super.getSettings(),
+            onSettingsChange2 => this.onSettingsChangeCallbacks.add(onSettingsChange2)
+        );
         this.easyDockFeature = this.easyDock.newEasyDockFeature();
         this.easyDockFeature.enable();
     }
@@ -58,9 +79,15 @@ class Islands {
 
     featureManager;
     getSettings;
-    constructor(/** @type {FeatureManager} */ fm, getSettings) {
+
+    constructor(/** @type {FeatureManager} */ fm, getSettings, callbackSettingsListener) {
         this.featureManager = fm;
         this.getSettings = getSettings;
+        callbackSettingsListener(this.onSettingsChange.bind(this));
+    }
+
+    onSettingsChange(...args) {
+
     }
 
     windowGap() {
@@ -167,9 +194,14 @@ class EasyDock {
 
     featureManager;
     getSettings;
-    constructor(/** @type {FeatureManager} */ fm, getSettings) {
+    constructor(/** @type {FeatureManager} */ fm, getSettings, callbackSettingsListener) {
         this.featureManager = fm;
         this.getSettings = getSettings;
+        callbackSettingsListener(this.onSettingsChange.bind(this));
+    }
+
+    onSettingsChange() {
+
     }
 
     get darkAccentColor() {
@@ -189,6 +221,10 @@ class EasyDock {
         };
 
         return colorMap[gnomeColor] || colorMap.slate;
+    }
+
+    getOpacity() {
+        return this.OPACITY_GLASSY;
     }
 
 
@@ -248,6 +284,7 @@ class EasyDock {
 
     showDockNow() {
         Main.overview.dash.translation_y = 0;
+        Main.overview.dash.opacity = OPACITY_MAX;
     }
 
 
@@ -306,8 +343,9 @@ class EasyDock {
             callback: () => Main.overview.show()
         }
 
+        const eventListeners = [overviewShowListener, overviewHideListener, hoverDockEnterListener, hoverDockLeaveListener, appButtonClickListener];
 
-        return this.featureManager.new({ onEnable, onDisable, eventListeners: [overviewShowListener, overviewHideListener, hoverDockEnterListener, hoverDockLeaveListener, appButtonClickListener] });
+        return this.featureManager.new({ onEnable, onDisable, eventListeners });
     }
 
 
