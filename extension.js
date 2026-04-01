@@ -8,7 +8,7 @@ import Clutter from "gi://Clutter";
 import St from "gi://St";
 /* @ts-ignore */
 import Gio from 'gi://Gio';
-import FeatureManager from './gnome-extensions-utils/FeatureManager.js';
+import FeatureManager, { Feature } from './gnome-extensions-utils/FeatureManager.js';
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
@@ -19,54 +19,282 @@ const SETTING_EASY_DOCK = "easy-dock";
 
 const OPACITY_MAX = 255;
 
+
 export default class PanelPillExtension extends Extension {
-    #featureManager = null;
-
-
-
     enable() {
         globalThis.global._panelpill = this;
-        /** @type {Set<Function>} */
-        this.onSettingsChangeCallbacks = new Set();
-        this.settingsChangeListenerFeature = this.featureManager.new({
-            onEnable: undefined, onDisable: undefined, eventListeners: [
-                {
-                    connectable: super.getSettings(),
-                    event: "changed",
-                    callback: (...args) => this.onSettingsChangeCallbacks.forEach(fun => fun(...args))
-                }
-            ]
-        })
-
-
-        this.island = new Islands(
-            this.featureManager,
-            () => super.getSettings(),
-            onSettingsChange1 => this.onSettingsChangeCallbacks.add(onSettingsChange1)
-        );
-        this.islandFeature = this.island.newIslandFeature();
-        this.islandFeature.enable();
-        this.easyDock = new EasyDock(
-            this.featureManager,
-            () => super.getSettings(),
-            onSettingsChange2 => this.onSettingsChangeCallbacks.add(onSettingsChange2)
-        );
-        this.easyDockFeature = this.easyDock.newEasyDockFeature();
-        this.easyDockFeature.enable();
+        this.featureManager = getMyFeatureManager({
+            PANEL_GAP: 20,
+            WINDOW_GAP: 2,
+            PANEL_HEIGHT: 40,
+            ORIGINAL_PANEL_HEIGHT: 32,
+            OVERVIEW_CORNER_DELAY: 1
+        });
+        //    this.featureManager.enableAll();
     }
-
     disable() {
         this.featureManager.disableAll();
-        this.#featureManager = undefined;
-        delete globalThis.global._panelpill;
     }
 
 
-    /** @returns {FeatureManager} */
-    get featureManager() {
-        return this.#featureManager ??= new FeatureManager();
+}
+
+
+const getMyFeatureManager = (params) => {
+
+
+    const panelPillFeatures = getPillFeatures(params);
+
+    const featPanelpill = Feature({
+        onEnable: ___ => fm.enableMore(...panelPillFeatures),
+        onDisable: _ => fm.disableMore(...panelPillFeatures)
+    })
+
+    ///
+
+    //TODO
+    //FIXME
+    // The reason i had a builder pattern, was to enforce the registration of all features before using them, so features can cross reference each other.
+    // With the current implementation, it is not enforced.
+
+    const fm = FeatureManager.
+        empty().
+        addFeature(panelPillFeatures[0]).
+        addFeature(panelPillFeatures[1]).
+        addFeature(panelPillFeatures[2]).
+        addFeature(panelPillFeatures[3]).
+        addFeature(panelPillFeatures[4]).
+        addFeature(featPanelpill).
+        build();
+        
+    fm.enable(featPanelpill);
+    return fm;
+}
+
+const getPillFeatures = ({ PANEL_GAP, WINDOW_GAP, PANEL_HEIGHT, ORIGINAL_PANEL_HEIGHT, OVERVIEW_CORNER_DELAY }) => {
+    const setPanelStyle = () => Main.panel.style = "background-color: transparent;";
+    const resetPanelStyle = () => Main.panel.style = null;
+
+    const featMainPanelStyle = Feature(({ setTimeout }) => ({
+        onEnable: setPanelStyle,
+        onDisable: resetPanelStyle,
+        eventListeners: [
+            {
+                connectable: Main.overview,
+                event: "hiding",
+                callback: () => setTimeout(setPanelStyle, OVERVIEW_CORNER_DELAY)
+            }
+        ]
+    }));
+
+    ///
+
+    let panelPlacementLock = 0;
+    const setPanelPlacement = () => {
+        if (panelPlacementLock > 0) return;
+        panelPlacementLock++;
+        Main.layoutManager.panelBox.y = globalThis.global.screen_height - WINDOW_GAP;
+        Main.layoutManager.panelBox.x = PANEL_GAP;
+        Main.layoutManager.panelBox.width = globalThis.global.screen_width - PANEL_GAP - PANEL_GAP;
+        Main.panel.height = PANEL_HEIGHT;
+        Main.panel.translation_y = PANEL_GAP - Main.layoutManager.panelBox.y;
+        panelPlacementLock--;
+    };
+    const resetPanelPlacement = () => {
+        if (panelPlacementLock > 0) return;
+        panelPlacementLock++;
+        Main.layoutManager.panelBox.y = 0;
+        Main.layoutManager.panelBox.x = 0;
+        Main.layoutManager.panelBox.width = globalThis.global.screen_width;
+        Main.panel.height = ORIGINAL_PANEL_HEIGHT;
+        Main.panel.translation_y = 0;
+        panelPlacementLock--;
+    };
+
+    const featMainPanelPlacement = Feature({
+        onEnable: setPanelPlacement,
+        onDisable: resetPanelPlacement,
+        eventListeners: [
+            {
+                connectable: Main.panel,
+                event: "notify",
+                callback: setPanelPlacement
+            }
+        ]
+    });
+
+    ///
+
+    const featMainPanelReactivity = Feature({
+        onEnable: () => Main.panel.reactive = false,
+        onDisable: _ => Main.panel.reactive = true,
+    })
+
+    ///
+
+    const featIslandPilled = Feature({
+        onEnable: () => Main.panel.get_children().map(c => c.style = `background-color: black; border-radius:${Main.panel.height}px;`),
+        onDisable: _ => Main.panel.get_children().map(c => c.style = null),
+    });
+
+    ///
+
+    const featOverviewMargin = Feature({
+        onEnable: () => {
+            const margin = PANEL_GAP + Main.panel.height + PANEL_GAP;
+            Main.overview._overview.first_child.first_child.style = `margin-top: ${margin}px;`
+        },
+        onDisable: () => Main.overview._overview.first_child.first_child.style = null
+    });
+
+    ///
+
+    return [
+        featIslandPilled,
+        featMainPanelPlacement,
+        featMainPanelReactivity,
+        featMainPanelStyle,
+        featOverviewMargin,
+    ];
+
+}
+
+class Is {
+    static #ORIGINAL_PANEL_HEIGHT = 32;
+    static OVERVIEW_CORNER_DELAY = 1;
+    static PANEL_GAP = 20;
+    static PANEL_HEIGHT = 40;
+    static panelPlacementLock = 0;
+    static WINDOW_GAP = 2;
+
+    static onEnable() {
+        this.setPanelStyle();
+        this.setPanelPlacement();
+        this.setIslandsStyle();
+        this.setOverviewMargin();
+        this.setPanelReactivity();
     }
 
+    static onDisable() {
+        this.resetPanelStyle();
+        this.resetPanelPlacement();
+        this.resetIslandsStyle();
+        this.resetOverviewMargin();
+        this.resetPanelReactivity();
+    }
+
+
+    static getFeature(tools) {
+        return {
+            onEnable: () => this.onEnable(),
+            onDisable: () => this.onDisable(),
+            eventListeners: this.getEventListeners(tools)
+        }
+    }
+
+    static getEventListeners(tools) {
+        return [
+            this.onPanelResize,
+            this.getOnOverviewHide(tools)
+        ]
+    }
+
+    static getOnOverviewHide({ setTimeout }) {
+        return {
+            connectable: Main.overview,
+            event: "hiding",
+            callback: () => setTimeout(() => this.setPanelStyle(), this.OVERVIEW_CORNER_DELAY)
+        }
+    }
+
+
+    static onPanelResize = {
+        connectable: Main.panel,
+        event: "notify",
+        callback: () => this.setPanelPlacement()
+    };
+
+
+    static setIslandsStyle() {
+        Main.panel.get_children().map(c => c.style = `background-color: black; border-radius:${this.PANEL_HEIGHT}px;`);
+    }
+    static resetIslandsStyle() {
+        Main.panel.get_children().map(c => c.style = null);
+    }
+
+    static setPanelStyle() {
+        // Main.panel.opacity = OPACITY_MAX;
+        Main.panel.style = "background-color: transparent;";
+    }
+    static resetPanelStyle() {
+        // Main.panel.opacity = OPACITY_MAX;
+        Main.panel.style = null;
+    }
+
+    static setPanelPlacement() {
+        if (this.panelPlacementLock > 0) return;
+        this.panelPlacementLock++;
+        Main.layoutManager.panelBox.y = globalThis.global.screen_height - this.WINDOW_GAP;
+        Main.layoutManager.panelBox.x = this.PANEL_GAP;
+        Main.layoutManager.panelBox.width = globalThis.global.screen_width - this.PANEL_GAP - this.PANEL_GAP;
+        Main.panel.height = this.PANEL_HEIGHT;
+        Main.panel.translation_y = this.PANEL_GAP - Main.layoutManager.panelBox.y;
+        this.panelPlacementLock--;
+
+    }
+    static resetPanelPlacement() {
+        if (this.panelPlacementLock > 0) return;
+        this.panelPlacementLock++;
+        Main.layoutManager.panelBox.y = 0;
+        Main.layoutManager.panelBox.x = 0;
+        Main.layoutManager.panelBox.width = globalThis.global.screen_width;
+        Main.panel.height = this.#ORIGINAL_PANEL_HEIGHT;
+        Main.panel.translation_y = 0;
+        this.panelPlacementLock--;
+    }
+
+    static setPanelReactivity() {
+        Main.panel.reactive = false;
+    }
+    static resetPanelReactivity() {
+        Main.panel.reactive = true;
+    }
+
+    static setOverviewMargin() {
+        const margin = this.PANEL_GAP + Main.panel.height + this.PANEL_GAP;
+        Main.overview._overview.first_child.first_child.style = `margin-top: ${margin}px;`
+    }
+    static resetOverviewMargin() {
+        Main.overview._overview.first_child.first_child.style = null;
+    }
+
+
+
+}
+
+class Ez {
+    getFeature({ setTimeout }) {
+        const onEnable = this.onEnable;
+        const onDisable = this.onDisable;
+        const eventListeners = this.eventListeners;
+        return { onEnable, onDisable, eventListeners };
+    }
+
+    onEnable() {
+
+    }
+    onDisable() {
+
+    }
+    get eventListeners() {
+        return [this.eventListener1];
+    }
+    get eventListener1() {
+        const event = "hi";
+        const connectable = undefined;
+        const callback = () => { };
+        return { connectable, event, callback };
+    }
 }
 
 class Islands {
@@ -80,7 +308,12 @@ class Islands {
     featureManager;
     getSettings;
 
-    constructor(/** @type {FeatureManager} */ fm, getSettings, callbackSettingsListener) {
+    /**
+     * @param {FeatureManager} fm
+     * @param {() => any} getSettings
+     * @param {(f: Function)=> any} callbackSettingsListener
+     */
+    constructor(fm, getSettings, callbackSettingsListener) {
         this.featureManager = fm;
         this.getSettings = getSettings;
         callbackSettingsListener(this.onSettingsChange.bind(this));
