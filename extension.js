@@ -312,11 +312,11 @@ export default class PanelPillExtension extends Extension {
     }
 
     setColoredDashStyle() {
-        const shadowStyle = `box-shadow:0 0 ${Main.overview.dash.height / 4}px -${Main.overview.dash.height / 32}px ${this.darkAccentColor};`;
-        const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px;`;
+        const shadowStyle = `box-shadow:0 ${Main.overview.dash.height / 16}px ${Main.overview.dash.height / 2}px -${Main.overview.dash.height / 8}px ${this.darkAccentColor}; `;
+        const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px; `;
         Main.overview.dash.set_style(shadowStyle + radiusStyle);
-        Main.overview.dash.first_child.set_style(`background-color: ${this.darkAccentColor};`);
-        Main.overview.dash.first_child.set_opacity(0);
+        Main.overview.dash.first_child.set_style(`background-color: #333333; `);
+        Main.overview.dash.first_child.set_opacity(110);
     }
 
     // EVENT TRIGGERED LOGIC
