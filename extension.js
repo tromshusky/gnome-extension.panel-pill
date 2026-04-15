@@ -49,6 +49,8 @@ export default class PanelPillExtension extends Extension {
     SCROLL_DIRECTION_LEFT = 3;
     SCROLL_DIRECTION_RIGHT = 2;
     SCROLL_DIRECTION_UP = 1;
+    SHADOW_INTENSIFIER = 3;
+    SHADOW_OFFSET_H_FRACTION = 20;
     STILL_ON_SCREEN_PIXEL = 4;
     TIEMOUT_HIDDEN = 10000;
     WINDOW_GAP = 2;
@@ -212,7 +214,7 @@ export default class PanelPillExtension extends Extension {
     setPanelSingleChildStyle(c, activeShadow = false) {
         const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height}px;`;
         const h = Main.panel.height;
-        const shadowStyle = `box-shadow: 0 -${h / 20}px ${h * (activeShadow ? 1 : 2) / 5}px ${h * (activeShadow ? 1 : -1) / 5.7}px ${this.darkAccentColor};`;
+        const shadowStyle = `box-shadow: 0 ${- h / this.SHADOW_OFFSET_H_FRACTION}px ${h / 2}px ${- h / (activeShadow ? 16 : 4)}px ${this.darkAccentColor};`;
 
         c.set_style(`${style_square} background-color: rgba(40,40,40,${this.DEFAULT_PANEL_OPACITY}); ${shadowStyle}`);
 
