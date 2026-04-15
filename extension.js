@@ -427,6 +427,7 @@ export default class PanelPillExtension extends Extension {
                     reactiveElem.connect("enter-event", () => {
                         reactiveElem.set_style(`box-shadow: 0 0 ${Main.panel.height / 2}px -${Main.panel.height / 8}px #666666;`);
                         this.setPanelSingleChildStyle(c1, true);
+                        return Clutter.EVENT_STOP;
                     })
                 ]);
                 this.#hoverListenerElemsAndIDs.push([
