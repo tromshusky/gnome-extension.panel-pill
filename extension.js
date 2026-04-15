@@ -6,34 +6,7 @@ import Gio from 'gi://Gio';
 // import Shell from "gi://Shell";
 import St from "gi://St";
 
-const DURATION_ASIDE = 7000;
-const DURATION_ASIDE_VERYLONG = 1000000;
-const DURATION_FADEIN = 2000;
-const DURATION_FLICK = 200;
-const DURATION_RETURN = 2000;
-const MAXIMIZED_V_H = 3;
-const PANEL_OPACITY_HIGH = 223;
-const OPACITY_MAX = 255;
-const PANEL_OPACITY_LOW = 100;
 const PANEL_RATIO = 20;
-const PANEL_GAP = 18;
-const PANEL_HEIGHT = 40;
-const ROUND_CORNERS_DELAY = 300;
-const SCROLL_DIRECTION_DOWN = 0;
-const SCROLL_DIRECTION_LEFT = 3;
-const SCROLL_DIRECTION_RIGHT = 2;
-const SCROLL_DIRECTION_UP = 1;
-const STILL_ON_SCREEN_PIXEL = 4;
-const TIEMOUT_HIDDEN = 10000;
-const TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
-const WINDOW_GAP = 2;
-const ANIMATION_NONE = -1;
-const ANIMATION_LEFT = 0;
-const ANIMATION_LEFTLEFT = 1;
-const ANIMATION_RIGHT = 2;
-const ANIMATION_RIGHTRIGHT = 3;
-const ANIMATION_DOWN = 4;
-const ANIMATION_UP = 5;
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
@@ -58,6 +31,35 @@ const get_panel_width = () => {
 }
 
 export default class PanelPillExtension extends Extension {
+    // ROUND_CORNERS_DELAY = 1;
+    DEFAULT_PANEL_OPACITY = 0.4;
+    DURATION_ASIDE = 7000;
+    DURATION_ASIDE_VERYLONG = 1000000;
+    DURATION_FADEIN = 2000;
+    DURATION_FLICK = 200;
+    DURATION_RETURN = 2000;
+    MAXIMIZED_V_H = 3;
+    PANEL_OPACITY_HIGH = 223;
+    OPACITY_MAX = 255;
+    PANEL_OPACITY_LOW = 100;
+    PANEL_GAP = 18;
+    PANEL_HEIGHT = 40;
+    SCROLL_DIRECTION_DOWN = 0;
+    SCROLL_DIRECTION_LEFT = 3;
+    SCROLL_DIRECTION_RIGHT = 2;
+    SCROLL_DIRECTION_UP = 1;
+    STILL_ON_SCREEN_PIXEL = 4;
+    TIEMOUT_HIDDEN = 10000;
+    TIMEOUT_STRETCH_AFTER_MAXIMIZE = 400;
+    WINDOW_GAP = 2;
+    ANIMATION_NONE = -1;
+    ANIMATION_LEFT = 0;
+    ANIMATION_LEFTLEFT = 1;
+    ANIMATION_RIGHT = 2;
+    ANIMATION_RIGHTRIGHT = 3;
+    ANIMATION_DOWN = 4;
+    ANIMATION_UP = 5;
+
     #mainOverviewListenerID1 = null;
     #mainOverviewListenerID2 = null;
     #mainPanelClickListenerID1 = null;
@@ -76,7 +78,7 @@ export default class PanelPillExtension extends Extension {
     #timeoutRoundnessID = null;
     #timeoutStretchID = null;
 
-    #ongoingAnimation = ANIMATION_NONE;
+    #ongoingAnimation = this.ANIMATION_NONE;
 
     #settings = null; // protect it from the gc, so the .connect stays alive
 
@@ -118,7 +120,7 @@ export default class PanelPillExtension extends Extension {
         this.undockify();
         this.resizeBackToVanilla();
 
-        Main.panel.opacity = OPACITY_MAX;
+        Main.panel.opacity = this.OPACITY_MAX;
         this.#settings = null;
     }
 
@@ -156,18 +158,18 @@ export default class PanelPillExtension extends Extension {
 
     get panelPlaceholderHeight() {
         return this.isSettingTrue(SETTING_WINDOW_GAP) ?
-            WINDOW_GAP
+            this.WINDOW_GAP
             : 0;
     }
 
     get panelTopMargin() {
         return this.isSettingTrue(SETTING_PANEL_GAP) ?
-            PANEL_GAP
+            this.PANEL_GAP
             : 0;
     }
 
     get panelSidewaysMargin() {
-        return PANEL_GAP;
+        return this.PANEL_GAP;
     }
 
     get darkAccentColor() {
@@ -194,6 +196,28 @@ export default class PanelPillExtension extends Extension {
         return this.settings.get_boolean(settingID);
     }
 
+    resetPanelChildStyles() {
+        Main.panel.get_children().map(c1 => {
+            c1.set_style(null);
+            c1.map(c2 => c2.first_child.set_style(null));
+        });
+    }
+
+    setPanelSingleChildStyle(c, activeShadow = false) {
+        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height}px;`;
+        const h = Main.panel.height;
+        const shadowStyle = `box-shadow: 0 -${h / 20}px ${h * (activeShadow ? 1 : 2) / 5}px ${h * (activeShadow ? 1 : -1) / 5.7}px ${this.darkAccentColor};`;
+
+        c.set_style(`${style_square} background-color: rgba(40,40,40,0.7); ${shadowStyle}`);
+
+    }
+
+    setPanelChildStyles() {
+        Main.panel.get_children().map(c => {
+            this.setPanelSingleChildStyle(c);
+        });
+    }
+
     resizeToPill() {
         const margin = this.panelTopMargin + Main.panel.height + this.panelTopMargin;
         Main.overview._overview.first_child.first_child.style = `margin-top: ${margin}px;`
@@ -204,16 +228,16 @@ export default class PanelPillExtension extends Extension {
         Main.panel.translation_y = this.panelTopMargin - global.screen_height + this.panelPlaceholderHeight;
         Main.layoutManager.panelBox.x = new_x;
         Main.layoutManager.panelBox.width = new_width;
-        Main.panel.height = PANEL_HEIGHT;
+        Main.panel.height = this.PANEL_HEIGHT;
         Main.panel.reactive = !this.isSettingTrue(SETTING_ISLANDS);
 
-        const style_square = this.isSettingTrue(SETTING_SQUARE_CORNERS) ? "" : `border-radius: ${Main.panel.height}px;`;
-        Main.panel.get_children().map(c => c.set_style("background-color: black;" + style_square));
+        this.setPanelChildStyles();
+
 
         // the panelBox works as a placeholder for maximized windows. height = 0 makes windows maximized until the brim
         // with height = 0 the panel itself stays on the normal height.
         Main.layoutManager.panelBox.y = global.screen_height - this.panelPlaceholderHeight;
-        Main.panel.opacity = PANEL_OPACITY_HIGH;
+        Main.panel.opacity = this.PANEL_OPACITY_HIGH;
         this.setPanelStyle();
     }
 
@@ -226,7 +250,7 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.height = Main.panel.height;
         Main.panel.translation_y = 0;
         Main.panel.set_style(null);
-        Main.panel.get_children().map(c => c.set_style(null));
+        this.resetPanelChildStyles();
     }
 
     setPanelStyle() {
@@ -244,11 +268,11 @@ export default class PanelPillExtension extends Extension {
         if (this.#timeoutFadeInStartEffectID)
             clearTimeout(this.#timeoutFadeInStartEffectID);
         this.#timeoutFadeinID = setTimeout(() => this.resetReactivity(), duration);
-        this.#timeoutFadeInStartEffectID = setTimeout(() => this.fadeInEffect(), duration - DURATION_FADEIN);
+        this.#timeoutFadeInStartEffectID = setTimeout(() => this.fadeInEffect(), duration - this.DURATION_FADEIN);
     }
 
     fadeInEffect() {
-        Main.panel.ease({ opacity: PANEL_OPACITY_LOW, duration: DURATION_FADEIN, mode: Clutter.AnimationMode.EASE_IN_QUAD });
+        Main.panel.ease({ opacity: this.PANEL_OPACITY_LOW, duration: this.DURATION_FADEIN, mode: Clutter.AnimationMode.EASE_IN_QUAD });
         Main.panel.first_child.first_child.first_child.remove_style_pseudo_class("hover");
     }
 
@@ -260,7 +284,7 @@ export default class PanelPillExtension extends Extension {
         this.#timeoutFadeinID = null;
         this.#timeoutFadeInStartEffectID = null;
         set_panel_reactivity(true);
-        Main.panel.opacity = PANEL_OPACITY_HIGH;
+        Main.panel.opacity = this.PANEL_OPACITY_HIGH;
     }
 
     dockify() {
@@ -286,7 +310,7 @@ export default class PanelPillExtension extends Extension {
     hideDock() {
         Main.overview.dash.ease({
             translation_y: 100,
-            duration: DURATION_FLICK,
+            duration: this.DURATION_FLICK,
             mode: Clutter.AnimationMode.EASE_IN_SINE
         });
     }
@@ -294,9 +318,9 @@ export default class PanelPillExtension extends Extension {
     showDock() {
         Main.panel.visible = true;
         Main.overview.dash.ease({
-            opacity: OPACITY_MAX,
+            opacity: this.OPACITY_MAX,
             translation_y: 0,
-            duration: DURATION_FLICK,
+            duration: this.DURATION_FLICK,
             mode: Clutter.AnimationMode.EASE_OUT_SINE
         });
     }
@@ -308,15 +332,20 @@ export default class PanelPillExtension extends Extension {
     resetDashStyle() {
         Main.overview.dash.set_style(null);
         Main.overview.dash.first_child.set_style(null);
-        Main.overview.dash.first_child.set_opacity(OPACITY_MAX);
+    }
+
+    setPassiveDashStyle() {
+        const shadowStyle = `box-shadow:0 ${Main.overview.dash.height / 16}px ${Main.overview.dash.height / 2}px -${Main.overview.dash.height / 4}px ${this.darkAccentColor}; `;
+        const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px; `;
+        Main.overview.dash.set_style(shadowStyle + radiusStyle);
+        Main.overview.dash.first_child.set_style(null);
     }
 
     setColoredDashStyle() {
         const shadowStyle = `box-shadow:0 ${Main.overview.dash.height / 16}px ${Main.overview.dash.height / 2}px -${Main.overview.dash.height / 8}px ${this.darkAccentColor}; `;
         const radiusStyle = `border-radius: ${Main.overview.dash.height / 4}px; `;
         Main.overview.dash.set_style(shadowStyle + radiusStyle);
-        Main.overview.dash.first_child.set_style(`background-color: #333333; `);
-        Main.overview.dash.first_child.set_opacity(110);
+        Main.overview.dash.first_child.set_style(`background-color: rgba(50,50,50,0.4); `);
     }
 
     // EVENT TRIGGERED LOGIC
@@ -368,7 +397,7 @@ export default class PanelPillExtension extends Extension {
         this.#appButtonClickListernerElemAndID.map(([elem, id]) => elem?.disconnect(id));
         this.#appButtonClickListernerElemAndID = [];
         const elem = Main.overview.dash.last_child.last_child.first_child;
-        const id = elem.connect('button-press-event', () => Main.overview.show());
+        const id = elem.connect('button-press-event', () => Main.overview.showApps());
         this.#appButtonClickListernerElemAndID.push([elem, id]);
     }
 
@@ -380,22 +409,24 @@ export default class PanelPillExtension extends Extension {
     enablePanelHoverColorListeners() {
         Main.panel.
             get_children().
-            flatMap(c => c.get_children().map(c => c.first_child)).
-            map(elem => {
+            map(c1 => c1.get_children().map(c2 => {
+                const reactiveElem = c2.first_child;
                 this.#hoverListenerElemsAndIDs.push([
-                    elem,
-                    elem.connect("enter-event", () => {
-                        const styleLine = `box-shadow: 0 0 16px 2px ${this.darkAccentColor};`;
-                        elem.style = (elem.style ?? "") + styleLine;
+                    reactiveElem,
+                    reactiveElem.connect("enter-event", () => {
+                        reactiveElem.set_style(`box-shadow: 0 0 ${Main.panel.height / 2}px -${Main.panel.height / 8}px #666666;`);
+                        this.setPanelSingleChildStyle(c1, true);
                     })
-                ])
+                ]);
                 this.#hoverListenerElemsAndIDs.push([
-                    elem,
-                    elem.connect("leave-event", () => {
-                        elem.style = elem.style?.replace(/box-shadow:[^;]*;?/g, "");
+                    reactiveElem,
+                    reactiveElem.connect("leave-event", () => {
+                        reactiveElem.set_style(null);
+                        this.setPanelSingleChildStyle(c1);
                     })
-                ])
-            });
+                ]);
+
+            }));
     }
 
     disablePanelHoverColorListeners() {
@@ -439,7 +470,7 @@ export default class PanelPillExtension extends Extension {
     overviewShowingBehaviour() {
         if (this.isSettingTrue(SETTING_EASY_DOCK)) {
             this.showDock();
-            this.resetDashStyle();
+            this.setPassiveDashStyle();
         }
     }
     enableOverviewShowingBehaviour() {
@@ -459,7 +490,8 @@ export default class PanelPillExtension extends Extension {
         // for some funny reason it only works with delay
         if (this.#timeoutRoundnessID != null)
             clearTimeout(this.#timeoutRoundnessID);
-        this.#timeoutRoundnessID = setTimeout(() => this.setPanelStyle(), ROUND_CORNERS_DELAY);
+        // this.setPanelStyle();
+        this.#timeoutRoundnessID = setTimeout(() => this.setPanelStyle(), 1);
         if (this.isSettingTrue(SETTING_EASY_DOCK)) {
             this.setColoredDashStyle();
             const [mouseX, mouseY] = global.get_pointer();
@@ -479,7 +511,7 @@ export default class PanelPillExtension extends Extension {
 
     enableOverviewClosingBehaviour() {
         if (this.#mainOverviewListenerID2 != null) Main.overview.disconnect(this.#mainOverviewListenerID2);
-        this.#mainOverviewListenerID2 = Main.overview.connect('hiding', () => this.overviewClosingBehaviour());
+        this.#mainOverviewListenerID2 = Main.overview.connectAfter('hidden', () => this.overviewClosingBehaviour());
     }
 
     disableOverviewClosingBehaviour() {
@@ -499,9 +531,9 @@ export default class PanelPillExtension extends Extension {
         } else {
 
             if (this.#timeoutVanishID != null) clearTimeout(this.#timeoutVanishID);
-            this.#timeoutVanishID = setTimeout(() => Main.panel.show(), TIEMOUT_HIDDEN);
+            this.#timeoutVanishID = setTimeout(() => Main.panel.show(), this.TIEMOUT_HIDDEN);
 
-            this.temporarySetReactivityFalse(TIEMOUT_HIDDEN + DURATION_FADEIN);
+            this.temporarySetReactivityFalse(this.TIEMOUT_HIDDEN + this.DURATION_FADEIN);
 
         }
 
@@ -532,14 +564,14 @@ export default class PanelPillExtension extends Extension {
     }
 
     undoMaximizeBehaviour(wm, win) {
-        if (win.metaWindow.get_maximized() == MAXIMIZED_V_H) {
-            const unmaxWindow = () => win.metaWindow.unmaximize(MAXIMIZED_V_H);
+        if (win.metaWindow.get_maximized() == this.MAXIMIZED_V_H) {
+            const unmaxWindow = () => win.metaWindow.unmaximize(this.MAXIMIZED_V_H);
             const stretchWindow = () => win.metaWindow.move_resize_frame(false, 0, 0, global.screen_width, global.screen_height);
 
             unmaxWindow();
             if (this.#timeoutStretchID)
                 clearTimeout(this.#timeoutStretchID);
-            this.#timeoutStretchID = setTimeout(stretchWindow, TIMEOUT_STRETCH_AFTER_MAXIMIZE);
+            this.#timeoutStretchID = setTimeout(stretchWindow, this.TIMEOUT_STRETCH_AFTER_MAXIMIZE);
         };
     };
 
@@ -563,10 +595,10 @@ export default class PanelPillExtension extends Extension {
 
     flickSideways(direction, dur, strong) {
         // with Here is meant the target side / direction side
-        if ((direction !== ANIMATION_RIGHT) && (direction !== ANIMATION_LEFT)) Main.panel.scaleY = 20;
-        const isRight = direction === ANIMATION_RIGHT;
+        if ((direction !== this.ANIMATION_RIGHT) && (direction !== this.ANIMATION_LEFT)) Main.panel.scaleY = 20;
+        const isRight = direction === this.ANIMATION_RIGHT;
 
-        const hasAnimation = this.#ongoingAnimation !== ANIMATION_NONE;
+        const hasAnimation = this.#ongoingAnimation !== this.ANIMATION_NONE;
         const alreadyMovingSoft = this.#ongoingAnimation === direction;
         const requestEnforcingDirection = alreadyMovingSoft && strong;
         const invalidAnimationOverride = hasAnimation && !requestEnforcingDirection;
@@ -584,7 +616,7 @@ export default class PanelPillExtension extends Extension {
 
         const thisAnimation =
             (relative_x === 0) ? direction :
-                (isRight ? ANIMATION_RIGHTRIGHT : ANIMATION_LEFTLEFT);
+                (isRight ? this.ANIMATION_RIGHTRIGHT : this.ANIMATION_LEFTLEFT);
 
         this.#ongoingAnimation = thisAnimation;
 
@@ -594,18 +626,18 @@ export default class PanelPillExtension extends Extension {
             mode: Clutter.AnimationMode.EASE_IN_OUT_BACK,
             onComplete: _ => {
                 if (this.#ongoingAnimation === thisAnimation)
-                    this.#ongoingAnimation = ANIMATION_NONE;
+                    this.#ongoingAnimation = this.ANIMATION_NONE;
             }
         });
         return true;
     }
 
     flickRight(dur, strong) {
-        this.flickSideways(ANIMATION_RIGHT, dur, strong);
+        this.flickSideways(this.ANIMATION_RIGHT, dur, strong);
     }
 
     flickLeft(dur, strong) {
-        this.flickSideways(ANIMATION_LEFT, dur, strong);
+        this.flickSideways(this.ANIMATION_LEFT, dur, strong);
     }
 
 
@@ -624,7 +656,7 @@ export default class PanelPillExtension extends Extension {
     flickUp(dur, callb) {
 
         if (Main.layoutManager.panelBox.translation_y < 0) return false;
-        const up_y = STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.translation_y - Main.panel.height;
+        const up_y = this.STILL_ON_SCREEN_PIXEL - Main.layoutManager.panelBox.y - Main.panel.translation_y - Main.panel.height;
         Main.layoutManager.panelBox.ease({
             translation_y: up_y,
             duration: dur,
@@ -640,30 +672,30 @@ export default class PanelPillExtension extends Extension {
         const strongFlickRight = event.get_scroll_delta()[0] < (-2);
 
         switch (direction) {
-            case SCROLL_DIRECTION_UP:
-                this.flickUp(DURATION_FLICK, _ => {
-                    const dur = DURATION_ASIDE_VERYLONG;
-                    this.temporarySetReactivityFalse(dur + DURATION_RETURN + DURATION_FADEIN);
+            case this.SCROLL_DIRECTION_UP:
+                this.flickUp(this.DURATION_FLICK, _ => {
+                    const dur = this.DURATION_ASIDE_VERYLONG;
+                    this.temporarySetReactivityFalse(dur + this.DURATION_RETURN + this.DURATION_FADEIN);
                     this.flickUp(dur, _ => {
-                        this.flickDown(DURATION_RETURN);
+                        this.flickDown(this.DURATION_RETURN);
                     });
                 });
                 break;
-            case SCROLL_DIRECTION_DOWN:
-                this.flickDown(DURATION_FLICK) &&
-                    this.temporarySetReactivityFalse(DURATION_FLICK + DURATION_FADEIN);
+            case this.SCROLL_DIRECTION_DOWN:
+                this.flickDown(this.DURATION_FLICK) &&
+                    this.temporarySetReactivityFalse(this.DURATION_FLICK + this.DURATION_FADEIN);
                 break;
-            case SCROLL_DIRECTION_RIGHT:
-                this.flickRight(DURATION_FLICK);
+            case this.SCROLL_DIRECTION_RIGHT:
+                this.flickRight(this.DURATION_FLICK);
                 break;
-            case SCROLL_DIRECTION_LEFT:
-                this.flickLeft(DURATION_FLICK);
+            case this.SCROLL_DIRECTION_LEFT:
+                this.flickLeft(this.DURATION_FLICK);
                 break;
             default:
                 if (strongFlickLeft) {
-                    this.flickLeft(DURATION_FLICK, true);
+                    this.flickLeft(this.DURATION_FLICK, true);
                 } else if (strongFlickRight) {
-                    this.flickRight(DURATION_FLICK, true);
+                    this.flickRight(this.DURATION_FLICK, true);
                 }
                 break;
         }
