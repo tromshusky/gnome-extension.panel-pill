@@ -23,6 +23,8 @@ const ANIMATION_UP = 5;
 
 const OPACITY_MAX = 255;
 
+const ORIG_PANEL_HEIGHT = Main.panel.height;
+
 
 const SETTING_ISLANDS = "islands";
 const SETTING_PANEL_GAP = "panel-gap";
@@ -256,6 +258,7 @@ export default class PanelPillExtension extends Extension {
         Main.layoutManager.panelBox.x = 0;
         Main.layoutManager.panelBox.width = global.screen_width;
         Main.layoutManager.panelBox.height = Main.panel.height;
+        Main.panel.height = this.ORIG_PANEL_HEIGHT;
         Main.panel.translation_y = 0;
         Main.panel.set_style(null);
         this.resetPanelChildStyles();
